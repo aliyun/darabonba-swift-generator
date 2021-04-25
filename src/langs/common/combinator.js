@@ -18,6 +18,7 @@ const {
   _config,
   _upperFirst,
   _lowerFirst,
+  is,
 } = require('../../lib/helper.js');
 
 class BaseCombinator {
@@ -183,6 +184,15 @@ class BaseCombinator {
       emit.emitln(this.eol);
     }
     emitter = null;
+  }
+
+  gramRender(gram) {
+    if (!is.grammer(gram)) {
+      return '';
+    }
+    let emitter = new Emitter(this.config);
+    this.grammer(emitter, gram, false, false);
+    return emitter.output;
   }
 
   grammerNewLine(emitter, gram) {

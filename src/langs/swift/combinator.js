@@ -46,37 +46,6 @@ const {
   TypeVoid
 } = require('../common/items');
 
-const assert = require('assert');
-
-function _names(notes) {
-  let nameMap = {};
-  if (notes['name']) {
-    notes['name'].forEach(note => {
-      if (note.prop !== note.value) {
-        nameMap[note.prop] = note.value;
-      }
-    });
-  }
-  return nameMap;
-}
-
-function _needRecur(prop_type) {
-  if (is.undefined(prop_type) || !is.tree(prop_type)) {
-    return false;
-  }
-  let itemType = prop_type.itemType ? prop_type.itemType : prop_type.valType;
-  if (is.undefined(itemType)) {
-    return false;
-  }
-  if (is.tree(itemType)) {
-    return _needRecur.call(this, itemType);
-  }
-  if (is.object(itemType) && !this.isClient(itemType)) {
-    return true;
-  }
-  return false;
-}
-
 class Combinator extends CombinatorBase {
   constructor(config, imports) {
     super(config, imports);
@@ -99,7 +68,7 @@ class Combinator extends CombinatorBase {
       full_name = this.coreClass(name);
     } else if (access.length === 1 && this.dependencies[access[0]]) {
       const item = this.dependencies[access[0]];
-      full_name = `${_upperFirst(_camelCase(item.scope))}_${_upperFirst(_camelCase(item.package_name))}`;
+      full_name = `${_upperFirst(_camelCase(item.scope))}_${_upperFirst(_camelCase(item.package_name))}.Client`;
     } else {
       full_name = name;
     }
@@ -130,24 +99,27 @@ class Combinator extends CombinatorBase {
   combine(objects = []) {
     const packageInfo = new PackageInfo(this.config, this.dependencies);
     packageInfo.emit(objects);
+    this.combineObject(objects, 'client');
+    this.combineObject(objects, 'model');
+  }
+
+  combineObject(objects, object_type) {
+    this.includeList = [];
     const outputPars = { head: '', body: '', foot: '' };
 
     /***************************** body ******************************/
     this.level = 0;
     let emitter = new Emitter(this.config);
-    objects.filter(obj => obj.type === 'model').forEach((object) => {
+    let models = objects.filter(obj => obj.type === object_type);
+    models.forEach((object, index) => {
       this.properties = {};
       object.body.filter(node => is.prop(node)).forEach(node => {
         this.properties[node.name] = node;
       });
       this.emitClass(emitter, object, object.subObject);
-    });
-    objects.filter(obj => obj.type === 'client').forEach((object) => {
-      this.properties = {};
-      object.body.filter(node => is.prop(node)).forEach(node => {
-        this.properties[node.name] = node;
-      });
-      this.emitClass(emitter, object, object.subObject);
+      if (index !== models.length - 1) {
+        emitter.emitln();
+      }
     });
     outputPars.body = emitter.output;
 
@@ -163,13 +135,12 @@ class Combinator extends CombinatorBase {
     if (!this.config.exec) {
       config.dir = `${config.dir}/Sources/${this.namespace}`;
     }
-    config.filename = this.namespace;
+    config.filename = object_type === 'model' ? 'Models' : 'Client';
     this.combineOutputParts(config, outputPars);
   }
 
   emitInclude(emitter) {
     emitter.emitln('import Foundation');
-    emitter.emitln('import Tea');
     emitter.emitln();
   }
 
@@ -182,34 +153,33 @@ class Combinator extends CombinatorBase {
         object.extends = [object.extends];
       }
       object.extends.forEach(baseClass => {
-        tmp.push(baseClass);
+        tmp.push(this.resolveName(baseClass));
       });
       parent = ': ' + tmp.join(', ') + ' ';
     }
     let tmp = object.name.split('.');
     let className = _upperFirst(tmp[tmp.length - 1]);
-    if (object.type === 'model' || object.body.some(item => !(item instanceof PropItem))) {
-      emitter.emitln(`public struct ${_avoidKeywords(className)} ${parent}{`, this.level);
-      this.level++;
-      const prefix = object.name + '.';
-      const subs = subObjects.filter(obj => {
-        if (!obj.name.startsWith(prefix)) {
-          return false;
-        }
-        let str = obj.name.substr(prefix.length);
-        return str.indexOf('.') < 0;
-      });
-      if (subs.length) {
-        subs.forEach(obj => this.emitClass(emitter, obj, subObjects));
-      }
-      this.level--;
-    } else {
-      emitter.emitln(`open class ${_avoidKeywords(className)} ${parent}{`, this.level);
+    if (object.type === 'client') {
+      className = 'Client';
     }
+    emitter.emitln(`${object.type === 'client' ? 'open' : 'public'} class ${_avoidKeywords(className)} ${parent}{`, this.level);
+    this.level++;
+    const prefix = object.name + '.';
+    const subs = subObjects.filter(obj => {
+      if (!obj.name.startsWith(prefix)) {
+        return false;
+      }
+      let str = obj.name.substr(prefix.length);
+      return str.indexOf('.') < 0;
+    });
+    if (subs.length) {
+      subs.forEach(obj => this.emitClass(emitter, obj, subObjects));
+    }
+    this.level--;
 
     /***************************** emit class body ******************************/
     this.level++;
-    object.body.forEach((node) => {
+    object.body.forEach((node, index) => {
       this.statements = _deepClone(this.properties);
       if (is.func(node)) {
         this.emitFunc(emitter, node);
@@ -219,6 +189,9 @@ class Combinator extends CombinatorBase {
         this.emitProp(emitter, node);
       } else {
         debug.stack('Unsupported object.body node', node);
+      }
+      if (index !== object.body.length - 1) {
+        emitter.emitln();
       }
     });
     this.level--;
@@ -290,7 +263,8 @@ class Combinator extends CombinatorBase {
   emitFunc(emitter, func) {
     this.funcReturnType = func.return[0];
     let func_name = _avoidKeywords(func.name);
-    emitter.emitln(`${_modify(func.modify)} func ${func_name}(${this.resolveFuncParams(func.params)}) -> ${this.emitType(this.funcReturnType)}{`, this.level);
+    let return_type = this.emitType(this.funcReturnType);
+    emitter.emitln(`${_modify(func.modify)} func ${func_name}(${this.resolveFuncParams(func.params)}) -> ${return_type ? `${return_type} ` : ''}{`, this.level);
     this.level++;
     func.body.forEach(element => {
       this.grammer(emitter, element);
@@ -300,7 +274,49 @@ class Combinator extends CombinatorBase {
   }
 
   emitMap(emitter, gram, layer = 0) {
-
+    let items = [];
+    let expandItems = [];
+    if (!Array.isArray(gram.value) && !(gram.value instanceof GrammerValue)) {
+      this.grammer(emitter, gram.value, false, false);
+      return;
+    }
+    items = gram.value.filter(i => !i.isExpand);
+    expandItems = gram.value.filter(i => i.isExpand);
+    if (!items.length && !expandItems.length) {
+      emitter.emit('[]');
+      return;
+    }
+    let needCast = gram.needCast;
+    if (needCast || expandItems.length) {
+      emitter.emit(`${this.config.tea.converter.name}::merge(`);
+    }
+    if (items.length) {
+      emitter.emitln('[');
+      this.levelUp();
+      items.forEach((item, index) => {
+        let emit = new Emitter(this.config);
+        this.grammer(emit, item, false, false);
+        emitter.emit(`"${item.key}": ${emit.output}`, this.level);
+        if (index !== items.length - 1) {
+          emitter.emit(',');
+        }
+        emitter.emitln();
+      });
+      this.levelDown();
+      emitter.emit(']', this.level);
+    } else {
+      emitter.emit('[]');
+    }
+    if (expandItems.length) {
+      expandItems.forEach((item, index) => {
+        let emit = new Emitter(this.config);
+        this.grammer(emit, item, false, false);
+        emitter.emit(`, ${emit.output}`);
+      });
+    }
+    if (needCast) {
+      emitter.emit(')');
+    }
   }
 
   /**************************************** analyze ****************************************/
@@ -326,15 +342,28 @@ class Combinator extends CombinatorBase {
     return !this.statements[name] ? false : true;
   }
 
+  addStatement(name, type) {
+    this.statements[name] = type;
+  }
+
   getStatementType(name) {
     if (!this.statements[name]) {
       debug.stack('Undefined statement', name, this.statements);
     }
-    return this.statements[name].type;
+    return this.statements[name];
   }
 
-  resolveParams(grammer) {
-    debug.halt('resolve params', grammer);
+  resolveParams(params) {
+    if (!params || !params.length) {
+      return '';
+    }
+    let tmp = [];
+    params.forEach((p) => {
+      let emitter = new Emitter(this.config);
+      this.grammer(emitter, p, false, false);
+      tmp.push(emitter.output);
+    });
+    return tmp.join(', ');
   }
 
   resolveFuncParams(params) {
@@ -344,18 +373,74 @@ class Combinator extends CombinatorBase {
     let tmp = [];
     params.forEach(param => {
       tmp.push(`_ ${param.key}: ${this.emitType(param.type)}`);
+      this.addStatement(param.key, param.type);
     });
     return tmp.join(', ');
   }
 
   resolveCallPath(paths, params, grammer) {
     // path type: parent | object | object_static | call | call_static | prop | prop_static | map | list
-    debug.halt('resolveCallPath', paths, params, grammer);
+    if (!paths || !paths.length) {
+      return '';
+    }
+    let res = [];
+    let resolver = {
+      parent: () => res = ['super'],
+      object: (p) => res.push(`.${p.name}`),
+      object_static: (p) => res.push(`.${this.resolveName(p.name)}`),
+      call: (p) => res.push(`.${p.name}(${params})`),
+      call_static: (p) => res.push(`.${this.resolveName(p.name)}(${params})`),
+      prop: (p) => res.push(`.${p.name[0] === '@' ? p.name.substr(1) : p.name}`),
+      prop_static: (p) => res.push(`.${p.name[0] === '@' ? p.name.substr(1) : p.name}`),
+      map: (p) => {
+        if (is.grammer(p.name)) {
+          res.push(`[${this.gramRender(p.name)}]`);
+        } else {
+          res.push(`["${p.name}"]`);
+        }
+      },
+      list: (p) => {
+        if (is.grammer(p.name)) {
+          res.push(`[${this.gramRender(p.name)}]`);
+        } else {
+          res.push(`[${p.name}]`);
+        }
+      }
+    };
+    paths.forEach((p) => {
+      if (resolver[p.type]) {
+        resolver[p.type].call(this, p);
+      } else {
+        debug.stack('Unsupported call path type', p);
+      }
+    });
+    let str = res.join('');
+    if (str[0] && str[0] === '.') {
+      str = str.substr(1);
+    }
+    return str;
   }
 
   /**************************************** grammer ****************************************/
   grammerVar(emitter, gram, emitType = true) {
-    emitter.emitln('Grammer Var');
+    let name = gram.name ? gram.name : gram.key;
+    name = _name(name);
+    let st = gram.varType === 'var' ? 'var' : 'let';
+    if (gram.varType === 'static_class') {
+      emitter.emit(`${name}::class`);
+    } else if (gram.varType === 'var' || gram.varType === 'const') {
+      if (!this.hasStatement(name) && emitType) {
+        emitter.emit(`${st} ${name}: ${this.emitType(gram.type)}`);
+        this.addStatement(name, gram.type);
+      } else {
+        emitter.emit(`${name}`);
+      }
+      if (!this.hasStatement(name)) {
+        this.addStatement(name, gram.type);
+      }
+    } else {
+      debug.stack(gram);
+    }
   }
 
   grammerValue(emitter, gram, layer = 0) {
@@ -428,12 +513,12 @@ class Combinator extends CombinatorBase {
         modules[resolve_method].call(this, emitter, gram);
         return;
       }
-      let params = gram.params.length > 0 ? this.resolveParams(gram) : '';
+      let params = gram.params.length > 0 ? this.resolveParams(gram.params) : '';
       emitter.emit(this.resolveCallPath(gram.path, params, gram));
     } else if (gram.type === 'prop' || gram.type === 'key') {
       emitter.emit(this.resolveCallPath(gram.path, '', gram));
     } else if (gram.type === 'super') {
-      emitter.emit(`super.init(${this.resolveParams})`);
+      emitter.emit(`super.init(${this.resolveParams(gram.params)})`);
     } else {
       debug.stack(gram);
     }
@@ -450,7 +535,19 @@ class Combinator extends CombinatorBase {
   }
 
   grammerLoop(emitter, gram) {
-    debug.halt('Grammer Loop');
+    if (gram.type === 'foreach') {
+      emitter.emit('for ');
+      this.grammerVar(emitter, gram.item, false, false);
+      emitter.emit(' in ');
+      this.grammer(emitter, gram.source, false, false);
+      emitter.emitln(' {');
+    }
+    this.levelUp();
+    gram.body.forEach(node => {
+      this.grammer(emitter, node);
+    });
+    this.levelDown();
+    emitter.emitln('}', this.level);
   }
 
   grammerBreak(emitter, gram) {
@@ -458,19 +555,72 @@ class Combinator extends CombinatorBase {
   }
 
   grammerCondition(emitter, gram) {
-    debug.halt('Grammer Condition');
+    if (gram.type === 'elseif') {
+      emitter.emit('else if');
+    } else {
+      emitter.emit(`${gram.type}`);
+    }
+
+    if (gram.type !== 'else') {
+      emitter.emit(' (');
+      let emit = new Emitter(this.config);
+      gram.conditionBody.forEach(condition => {
+        this.grammer(emitter, condition, false, false);
+      });
+      emitter.emit(`${emit.output})`);
+    }
+
+    if (gram.body.length) {
+      emitter.emitln(' {');
+      this.levelUp();
+      gram.body.forEach(node => {
+        this.grammer(emitter, node);
+      });
+      this.levelDown();
+      emitter.emitln('}', this.level);
+    } else {
+      emitter.emitln(' {}');
+    }
+
+    if (gram.elseItem.length && gram.elseItem.length > 0) {
+      gram.elseItem.forEach(e => {
+        this.grammer(emitter, e);
+      });
+    }
   }
 
   grammerTryCatch(emitter, gram) {
-    debug.halt('Grammer Try Catch');
+    emitter.emitln('do {');
+    this.levelUp();
+    gram.body.forEach(node => this.grammer(emitter, node));
+    this.levelDown();
+    emitter.emitln('}', this.level);
+    if (gram.catchBody.length) {
+      gram.catchBody.forEach(item => this.grammer(emitter, item, false, false));
+    } else {
+      emitter.emitln('catch Error(e) { throw e}', this.level);
+    }
   }
 
   grammerCatch(emitter, gram) {
-    debug.halt('Grammer Catch');
+    let emitterVar = new Emitter();
+    this.grammerVar(emitterVar, gram.exceptions.exceptionVar);
+    let varName = emitterVar.output;
+    emitter.emit(`catch (${this.emitType(gram.exceptions.type)} `, this.level);
+    emitter.emit(varName);
+    emitter.emitln(') {');
+    this.levelUp();
+    gram.body.forEach(node => this.grammer(emitter, node));
+    this.levelDown();
+    emitter.emitln('}', this.level);
   }
 
   grammerFinally(emitter, gram) {
-    debug.halt('Grammer Finaly');
+    emitter.emitln('catch {', this.level);
+    this.levelUp();
+    gram.body.forEach(node => this.grammer(emitter, node));
+    this.levelDown();
+    emitter.emitln('}', this.level);
   }
 
   grammerContinue(emitter, gram) {
@@ -478,44 +628,124 @@ class Combinator extends CombinatorBase {
   }
 
   grammerThrows(emitter, gram) {
-    debug.halt('Grammer Throws');
+    if (gram.exception === null) {
+      emitter.emit('throw ');
+      this.grammerValue(emitter, gram.params[0]);
+    } else {
+      if (gram.params.length > 0) {
+        emitter.emit(`throw ${this.emitType(gram.exception)}(`);
+        if (gram.params.length === 1) {
+          this.grammerValue(emitter, gram.params[0]);
+        } else {
+          let tmp = [];
+          gram.params.forEach(p => {
+            let emit = new Emitter();
+            this.grammerValue(emit, p);
+            tmp.push(emit.output);
+          });
+          emitter.emit(tmp.join(', '));
+        }
+        emitter.emit(')');
+      } else {
+        let msg = gram.message ? `'${gram.message}'` : '';
+        emitter.emit(`throw ${this.emitType(gram.exception)}(${msg})`);
+      }
+    }
   }
 
-  grammerNewObject(emitter, gram, isAssign = true, isPtrParam = false) {
-    debug.halt('Grammer New Object');
+  grammerNewObject(emitter, gram) {
+    let objectName = '';
+    objectName = gram.name;
+    emitter.emit(`${this.resolveName(objectName)}(`);
+    if (!Array.isArray(gram.params)) {
+      this.grammerValue(emitter, gram.params);
+    } else {
+      emitter.emit(this.resolveParams(gram.params));
+    }
+    emitter.emit(')');
   }
 
   grammerReturn(emitter, gram) {
-    debug.halt('Grammer Return');
+    emitter.emit('return ');
+
+    if (gram.type === 'null') {
+      this.grammerValue(emitter, new GrammerValue('null'));
+    } else if (gram.type === 'grammer') {
+      this.grammer(emitter, gram.expr, false, false);
+    } else if (gram.type === 'string') {
+      emitter.emit('""');
+    } else {
+      this.grammer(emitter, gram.expr, false, false);
+    }
   }
 
   /**************************************** behavior ****************************************/
   behaviorTimeNow(emitter, behavior) {
-    debug.halt('BehaviorTimeNow');
+    emitter.emit('Tea.timeNow()');
   }
 
   behaviorDoAction(emitter, behavior) {
-    debug.halt('behaviorDoAction');
+    emitter.emit('', this.level);
+    this.grammerVar(emitter, behavior.var);
+    emitter.emit(`= ${this.addInclude('$Core')}::${this.config.tea.core.doAction}(`);
+    let params = [];
+    behavior.params.forEach(p => {
+      let emit = new Emitter();
+      this.grammerValue(emit, p);
+      params.push(emit.output);
+    });
+    emitter.emit(params.join(', '));
+    emitter.emitln(')');
+    behavior.body.forEach(node => {
+      this.grammer(emitter, node);
+    });
   }
 
   behaviorToMap(emitter, behavior) {
-    debug.halt('behaviorToMap');
+    const grammer = behavior.grammer;
+    if (grammer instanceof GrammerCall) {
+      this.grammerCall(emitter, grammer);
+    } else if (grammer instanceof GrammerVar) {
+      this.grammerVar(emitter, grammer);
+    } else {
+      debug.stack(grammer);
+    }
   }
 
   behaviorToModel(emitter, behavior) {
-    debug.halt('behaviorToModel');
+    emitter.emit(`${behavior.expected}.fromMap(`);
+    this.grammer(emitter, behavior.grammer, false, false);
+    emitter.emit(')');
   }
 
   behaviorSetMapItem(emitter, behavior) {
-    debug.halt('behaviorSetMapItem');
+    let emit = new Emitter();
+    this.grammerCall(emit, behavior.call);
+    emitter.emit(`${emit.output}["${behavior.key}"] = `, this.level);
+    this.grammerValue(emitter, behavior.value);
+    emitter.emitln(';');
   }
 
   behaviorRetry(emitter, behavior) {
-    debug.halt('behaviorRetry');
+    emitter.emitln(`throw TeaError.runtimeError(${this.config.request}, ${this.config.response})`, this.level);
   }
 
   behaviorTamplateString(emitter, behavior) {
-    debug.halt('behaviorTamplateString');
+    let tmp = [];
+    behavior.items.forEach(item => {
+      let emit = new Emitter(this.config);
+      if (item.dataType instanceof TypeString) {
+        this.grammer(emit, item, false, false);
+      } else {
+        emit.emit('String(');
+        this.grammer(emit, item, false, false);
+        emit.emit(')');
+      }
+      if (emit.output && emit.output !== '""') {
+        tmp.push(emit.output);
+      }
+    });
+    emitter.emit(tmp.join(' + '));
   }
 }
 module.exports = Combinator;
