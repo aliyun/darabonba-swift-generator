@@ -13,10 +13,8 @@ const {
   is,
   _symbol,
   _modify,
-  _contain,
   _deepClone,
   _upperFirst,
-  _toSnakeCase,
   _avoidKeywords,
   _camelCase,
   _name,
@@ -25,25 +23,16 @@ const {
 const Emitter = require('../../lib/emitter');
 
 const {
-  PropItem,
   AnnotationItem,
 
-  GrammerNewObject,
-  GrammerThrows,
-  GrammerCatch,
   GrammerValue,
   GrammerCall,
   GrammerVar,
-
-  BehaviorToMap,
 
   TypeItem,
   TypeMap,
   TypeString,
   TypeGeneric,
-  BehaviorTamplateString,
-  GrammerReturn,
-  TypeVoid
 } = require('../common/items');
 
 class Combinator extends CombinatorBase {
