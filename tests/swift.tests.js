@@ -32,13 +32,16 @@ function check(moduleName, expectedFiles = []) {
   const dsl = fs.readFileSync(mainFilePath, 'utf8');
   const ast = DSL.parse(dsl, mainFilePath);
   generator.visit(ast);
-  expectedFiles.forEach(element => {
-    const outputFilePath = path.join(outputDir, moduleName, element);
-    const expectedFilePath = path.join(expectedDir, moduleName, element);
-    const expected = fs.readFileSync(expectedFilePath, 'utf8');
-    assert.deepStrictEqual(fs.readFileSync(outputFilePath, 'utf8'), expected);
-  });
+  setTimeout(function () {
+    expectedFiles.forEach(element => {
+      const outputFilePath = path.join(outputDir, moduleName, element);
+      const expectedFilePath = path.join(expectedDir, moduleName, element);
+      const expected = fs.readFileSync(expectedFilePath, 'utf8');
+      assert.deepStrictEqual(fs.readFileSync(outputFilePath, 'utf8'), expected);
+    });
+  }, 2000);
 }
 
-describe('PHP Generator', function () {
+describe('Swift Generator', function () {
+  check('complex', []);
 });

@@ -7,4 +7,3 @@ runtime/
 output/
 .nyc_output/
 coverage/
-libraries/
