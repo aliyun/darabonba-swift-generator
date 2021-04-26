@@ -5,8 +5,13 @@ const fs = require('fs');
 const assert = require('assert');
 require('mocha-sinon');
 
-const DSL = require('@darabonba/parser');
+const {
+  _name,
+  _camelCase,
+  _upperFirst
+} = require('../src/lib/helper');
 
+const DSL = require('@darabonba/parser');
 const Generator = require('../src/generator');
 
 const lang = 'swift';
@@ -20,7 +25,8 @@ function check(moduleName, expectedFiles = []) {
   const moduleOutputDir = path.join(outputDir, moduleName);
   const prefixDir = path.join(fixturesDir, moduleName);
   const pkgContent = fs.readFileSync(
-    fs.existsSync(path.join(prefixDir, 'Darafile')) ? path.join(prefixDir, 'Darafile') : path.join(prefixDir, 'Teafile'), 'utf8');
+    fs.existsSync(path.join(prefixDir, 'Darafile')) ?
+      path.join(prefixDir, 'Darafile') : path.join(prefixDir, 'Teafile'), 'utf8');
   const pkgInfo = JSON.parse(pkgContent);
   const config = {
     outputDir: moduleOutputDir,
@@ -32,6 +38,7 @@ function check(moduleName, expectedFiles = []) {
   const dsl = fs.readFileSync(mainFilePath, 'utf8');
   const ast = DSL.parse(dsl, mainFilePath);
   generator.visit(ast);
+  let package_name = `${_upperFirst(_camelCase(_name(config.scope)))}_${_upperFirst(_camelCase(_name(config.name)))}`;
   setTimeout(function () {
     expectedFiles.forEach(element => {
       const outputFilePath = path.join(outputDir, moduleName, element);
@@ -43,5 +50,102 @@ function check(moduleName, expectedFiles = []) {
 }
 
 describe('Swift Generator', function () {
-  check('complex', []);
+  it('add annotation should ok', function () {
+    check('annotation', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Sources/Darabonba_Main/Models.swift'
+    ]);
+  });
+
+  it('api should ok', function () {
+    check('api', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('add comments should ok', function () {
+    check('comment', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Sources/Darabonba_Main/Models.swift'
+    ]);
+  });
+
+  it('complex should ok', function () {
+    check('complex', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Sources/Darabonba_Main/Models.swift'
+    ]);
+  });
+
+  it('const should ok', function () {
+    check('const', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('empty should ok', function () {
+    check('empty', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('function should ok', function () {
+    check('function', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('import should ok', function () {
+    check('import', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('map should ok', function () {
+    check('map', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('model should ok', function () {
+    check('model', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Sources/Darabonba_Main/Models.swift'
+    ]);
+  });
+
+  it('statements should ok', function () {
+    check('statements', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('super should ok', function () {
+    check('super', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('alias should ok', function () {
+    check('alias', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('number should ok', function () {
+    check('number', [
+      'Sources/Darabonba_Main/Client.swift',
+    ]);
+  });
+
+  it('package should ok', function () {
+    check('package', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Package.swift',
+      'Darabonba_Main.podspec',
+      'Cartfile',
+      '.gitignore',
+      '.swiftformat'
+    ]);
+  });
 });
