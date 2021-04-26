@@ -19,6 +19,10 @@
 
 # Darabonba Swift 生成器
 
+## 运行环境
+
+- Node.js >= 10.0
+
 ## 安装
 
 Darabonba 生成器只能在 Node.js 环境下运行。建议使用 [NPM](https://www.npmjs.com/) 包管理工具安装。在终端输入以下命令进行安装:
@@ -62,6 +66,14 @@ let generator = new SwiftGenerator(generatorConfig);
 generator.visit(ast);
 
 // The execution result will be output in the 'outputDir'
+```
+
+## 快速开始
+
+```bash
+git clone https://github.com/aliyun/swift-generator.git
+cd swift-generator/
+node examples/complex.js
 ```
 
 ## 问题反馈
