@@ -93,13 +93,16 @@ class Combinator extends CombinatorBase {
   }
 
   combineObject(objects, object_type) {
+    let models = objects.filter(obj => obj.type === object_type);
+    if (!models.length) {
+      return;
+    }
     this.includeList = [];
     const outputPars = { head: '', body: '', foot: '' };
 
     /***************************** body ******************************/
     this.level = 0;
     let emitter = new Emitter(this.config);
-    let models = objects.filter(obj => obj.type === object_type);
     models.forEach((object, index) => {
       this.properties = {};
       object.body.filter(node => is.prop(node)).forEach(node => {
@@ -176,6 +179,8 @@ class Combinator extends CombinatorBase {
         this.emitConstruct(emitter, node);
       } else if (is.prop(node)) {
         this.emitProp(emitter, node);
+      } else if (is.annotation(node)) {
+        this.emitAnnotation(node);
       } else {
         debug.stack('Unsupported object.body node', node);
       }
