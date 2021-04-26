@@ -19,6 +19,10 @@ English | [简体中文](/README-zh-CN.md)
 
 # Darabonba Code Generator for Swift
 
+## Running Environment
+
+- Node.js >= 10.0
+
 ## Installation
 
 Darabonba Code Generator was designed to work in Node.js. The preferred way to install the Generator is to use the [NPM](https://www.npmjs.com/) package manager. Simply type the following into a terminal window:
@@ -62,6 +66,14 @@ let generator = new SwiftGenerator(generatorConfig);
 generator.visit(ast);
 
 // The execution result will be output in the 'outputDir'
+```
+
+## Quickly Start
+
+```bash
+git clone https://github.com/aliyun/swift-generator.git
+cd swift-generator/
+node examples/complex.js
 ```
 
 ## Issues
