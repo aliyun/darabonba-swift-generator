@@ -2,9 +2,10 @@
 
 const path = require('path');
 const fs = require('fs');
-const debug = require('./lib/debug');
 
-const { _deepClone, _assignObject } = require('./lib/helper');
+const {
+  _deepClone,
+  _assignObject } = require('./lib/helper');
 const ClientResolver = require('./resolver/client');
 const ModelResolver = require('./resolver/model');
 const DSL = require('@darabonba/parser');
@@ -38,22 +39,13 @@ function readModuleMeta(module_dir, pkg_dir, lock) {
 function resolveDependencies(lang, config, ast) {
   const imports = ast.imports;
   const dependencies = {
-    // Package AliasID : { meta, scope, package_name, client_name, client_alias }
+    // Package AliasID : { meta, scope, package_name, client_name }
   };
   if (!imports || !imports.length) {
     return dependencies;
   }
-
-  const self_client_name = config.clientName
-    ? config.clientName.toLowerCase()
-    : config.client.name.toLowerCase();
   const libraries = config.libraries;
   const lock = readLock(config.pkgDir);
-  const default_client_name = config.client.name;
-  const default_model_dir = config.model.dir;
-
-  let package_sets = [];
-  let client_sets = [];
   ast.imports.forEach((item) => {
     const aliasId = item.lexeme;
     const meta = readModuleMeta(
@@ -66,41 +58,22 @@ function resolveDependencies(lang, config, ast) {
       tag: libraries[aliasId],
       alias_id: aliasId
     };
-    const scope = meta.scope;
-    let package_name = meta.name;
-    let client_name = default_client_name;
-    let model_dir = default_model_dir;
+    let name = meta.name;
+    let scope = meta.scope;
+    let package_name = `${scope}_${name}`;
+    let client_name = 'Client';
     let lang_config = !meta[lang] ? {} : meta[lang];
-    if (lang_config.package) {
-      package_name = lang_config.package;
+    if (lang_config.packageInfo && lang_config.packageInfo.name) {
+      package_name = lang_config.packageInfo.name;
     }
     if (lang_config.clientName) {
       client_name = lang_config.clientName;
-    }
-    if (lang_config.modelDirName) {
-      model_dir = lang_config.modelDirName;
-    }
-    // check package name duplication
-    if (package_sets.indexOf(package_name.toLowerCase()) > 0) {
-      debug.stack(`The package name (${package_name}) has been defined in ${aliasId} dara package.`);
-    }
-    package_sets.push(package_name.toLowerCase());
-
-    // check client name duplication
-    let client_name_lower = client_name.toLowerCase();
-    let client_alias = '';
-    if (client_sets.indexOf(client_name_lower) > -1 || client_name_lower === self_client_name) {
-      client_alias = package_name.split('.').join('') + '->' + client_name.split('.').join('');
-    } else {
-      client_sets.push(client_name_lower);
     }
     dependencies[aliasId] = {
       meta,
       scope,
       package_name,
-      client_name,
-      client_alias,
-      model_dir
+      client_name
     };
   });
   return dependencies;
@@ -217,12 +190,6 @@ class Generator {
     const dependencies = resolveDependencies(lang, config, ast);
     if (config.advanced) {
       resolveLibraries(config.pkgDir, dependencies);
-    }
-    if (config.clientName) {
-      config.client.name = config.clientName;
-    }
-    if (config.modelDirName) {
-      config.model.dir = config.modelDirName;
     }
     return resolveObject(lang, config, ast, dependencies);
   }

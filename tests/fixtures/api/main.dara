@@ -17,7 +17,15 @@ api helloRuntime(): void {
     host = 'www.test.com',
   };
 } returns {
-  return;
+  throw {
+    code = __response.statusCode,
+    message = `message`,
+    data = {
+      test = 'test',
+    },
+  };
 } runtime {
-
+  timeouted = 'retry',
+  ignoreSSL = true,
+  keepAlive = false
 }

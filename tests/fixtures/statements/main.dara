@@ -1,3 +1,5 @@
+type @test = string
+
 static function helloIf(): void {
   if (true) {
   }
@@ -11,7 +13,18 @@ static function helloIf(): void {
   }
 }
 
-static function helloThrow() : void {
+async function helloAsync() : void {
+  var test = @test;
+  @test = 'test';
+  helloSync(@test);
+  helloDeclare(@test);
+}
+
+function helloSync(test: string) : void {
+  var str = test;
+}
+
+static function helloThrow() throws : void {
   throw {};
 }
 
@@ -27,20 +40,36 @@ static function helloWhile() : void {
   }
 }
 
-static function helloDeclare() : void {
+static function helloDeclare(test: string) : string {
   var hello = "world";
   var helloNull: string = null;
   hello = "hehe";
+  return test;
+}
+
+static function trycatch() throws : void {
+  try {
+    var a = 'test';
+  } catch (error) {
+    var b = 'test';
+    var e = error;
+  } finally {
+    var c = 'test';
+  }
 }
 
 init();
 
-api hello(): void {
+api hello(body: string): void {
   __request.method = 'GET';
   __request.pathname = '/';
   __request.headers = {
     host = 'www.test.com',
   };
+  __request.body = 'test';
+  var test: string = null;
+  __request.body = test;
+  __request.body = body;
   if (true) {
     __request.headers.host = 'www.test2.com';
   }

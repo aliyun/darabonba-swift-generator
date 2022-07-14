@@ -124,10 +124,15 @@ class TypeObject extends TypeItem {
   }
 }
 
-class TypeStream extends TypeBase {
-  constructor(writable = null) {
+class TypeInputStream extends TypeBase {
+  constructor() {
     super();
-    this.writable = writable;
+  }
+}
+
+class TypeOutputStream extends TypeBase {
+  constructor() {
+    super();
   }
 }
 
@@ -149,7 +154,7 @@ class Grammer extends Item {
 }
 
 class GrammerValue extends Grammer {
-  constructor(type, value, key = '', needCast = false) {
+  constructor(type, value, key = '', needCast = false, expected = '', isOptional = false) {
     super();
     if (key instanceof TypeItem) {
       this.dataType = key;
@@ -160,7 +165,10 @@ class GrammerValue extends Grammer {
     this.type = type;        // map | array | string | number | call | null | behavior | param | expr | merge | var | class
     this.value = value;
     this.needCast = needCast;
+    this.expected = expected;
+    this.isOptional = isOptional;
     this.isExpand = false;
+    this.needToReadable = false;
   }
 }
 
@@ -178,29 +186,33 @@ class GrammerNewObject extends Grammer {
 }
 
 class GrammerVar extends Grammer {
-  constructor(name = '', dataType = '', varType = 'var') {
+  constructor(name = '', dataType = '', varType = 'var', needCast = false, isOptional = false) {
     super();
     this.name = name;
     this.type = dataType;      // TypeItem
     this.varType = varType;    // static_class 静态类名 || var 可变 || const 不可变
+    this.needCast = needCast;
+    this.isOptional = isOptional;
     this.eol = false;
+    this.needToReadable = false;
     assert.strictEqual(true, this.type instanceof TypeItem);
   }
 }
 
 class GrammerExpr extends Grammer {
-  constructor(left = null, opt = '', right = '') {
+  constructor(left = null, opt = '', right = '', as = '') {
     super();
     this.left = left;    // GrammerVar
     this.opt = opt;
     this.right = right;
+    this.as = as;
     this.setBelongTo(left, this.index);
     this.setBelongTo(right, this.index);
   }
 }
 
 class GrammerCall extends Grammer {
-  constructor(type = 'method', path = [], params = [], returnType = null, hasThrow = false) {
+  constructor(type = 'method', path = [], params = [], returnType = null, hasThrow = false, isAsync = false, isStatic = false, isOptional = false) {
     super();
     this.type = type;     // method | key | index | prop | sys_func | super
     this.path = [];
@@ -213,6 +225,9 @@ class GrammerCall extends Grammer {
     }
     this.returnType = returnType;  // TypeItem
     this.hasThrow = hasThrow;
+    this.isAsync = isAsync;
+    this.isStatic = isStatic;
+    this.isOptional = isOptional;
     assert.strictEqual(true, this.returnType instanceof TypeItem);
   }
 
@@ -595,7 +610,8 @@ class BehaviorTamplateString extends Behavior {
 }
 
 module.exports = {
-  TypeStream,
+  TypeInputStream,
+  TypeOutputStream,
   TypeObject,
 
   TypeGeneric,

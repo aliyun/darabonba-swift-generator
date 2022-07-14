@@ -1,7 +1,9 @@
 import Foundation
+import Tea
+import DarabonbaImport
 
-open class Client : Darabonba_Import.Client {
-    init(_ config: Darabonba_Import.Config) {
-        super.init(config)
+open class Client : DarabonbaImport.Client {
+    init(_ config: DarabonbaImport.Config) throws -> {
+        try super.init(config)
     }
 }

@@ -7,3 +7,4 @@ runtime/
 output/
 .nyc_output/
 coverage/
+**/.build/

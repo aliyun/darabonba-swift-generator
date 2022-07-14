@@ -1,11 +1,11 @@
 Pod::Spec.new do |spec|
 
-  spec.name         = "${name}"
-  spec.version      = "${version}"
+  spec.name         = "Package"
+  spec.version      = "0.0.1"
   spec.license      = "Apache 2.0"
-  spec.summary      = "${desc}"
-  spec.homepage     = "${homepage}" 
-  spec.author       = { ${author} }
+  spec.summary      = "Darabonba Package SDK"
+  spec.homepage     = "https://github.com/aliyun/package" 
+  spec.author       = { "Alibaba Cloud SDK" => "sdk-team@alibabacloud.com" }
 
   spec.source       = { :git => spec.homepage + '.git', :tag => spec.version }
   spec.source_files = 'Sources/**/*.swift'
@@ -18,6 +18,6 @@ Pod::Spec.new do |spec|
   spec.tvos.deployment_target    = '13.0'
 
   spec.dependency 'Tea',  '~> 1.0.0'
-${podspecDependencies}
+
   spec.swift_version='5.6'
 end

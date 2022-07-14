@@ -1,30 +1,38 @@
 import Foundation
+import Tea
 
 open class Client {
-    init() {
+    public var _test: String?
+
+    init() throws -> {
     }
 
-    public func hello() -> Void {
-        var _request: Tea.Resquest = Tea.Resquest()
-        __request.method = "GET"
-        __request.pathname = "/"
-        __request.headers = [
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func hello(_ body: String) async throws -> Void {
+        var _request: Tea.TeaRequest = Tea.TeaRequest()
+        _request.method = "GET"
+        _request.pathname = "/"
+        _request.headers = [
             "host": "www.test.com"
         ]
+        _request.body = Tea.TeaCore.toReadable("test")
+        var test: String? = nil
+        _request.body = Tea.TeaCore.toReadable(test as! String)
+        _request.body = Tea.TeaCore.toReadable(body as! String)
         if (true) {
-            __request.headers["host"] = "www.test2.com";
+            _request.headers["host"] = "www.test2.com";
         }
-        var _lastRequest: Tea.Resquest = _request
-        var _response: Tea.Response= Darabonba::doAction(_request)
+        var _lastRequest: Tea.TeaRequest = _request
+        var _response: Tea.TeaResponse = try await Tea.TeaCore.doAction(_request)
         if (true) {
-            throw TeaError.runtimeError(_request, _response)
+            throw Tea.RetryableError()
         }
         else {
             true
         }
-        super.helloIf()
+        helloIf()
         !false
-        var a: String = nil
+        var a: String? = nil
         a = "string"
         return nil
     }
@@ -36,8 +44,20 @@ open class Client {
         else {}
     }
 
-    public static func helloThrow() -> Void {
-        throw Tea.ClientError([])
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func helloAsync() async throws -> Void {
+        var test: String = self._test!
+        self._test = "test"
+        helloSync(self._test!)
+        helloDeclare(self._test)
+    }
+
+    public func helloSync(_ test: String) -> Void {
+        var str: String = test as! String
+    }
+
+    public static func helloThrow() throws -> Void {
+        throw Tea.ReuqestError([:])
     }
 
     public static func helloForBreak() -> Void {
@@ -52,9 +72,27 @@ open class Client {
         }
     }
 
-    public static func helloDeclare() -> Void {
+    public static func helloDeclare(_ test: String?) -> String {
         var hello: String = "world"
-        var helloNull: String = nil
+        var helloNull: String? = nil
         hello = "hehe"
+        return test as! String
+    }
+
+    public static func trycatch() throws -> Void {
+        do {
+            var a: String = "test"
+        }
+        catch {
+            if error is Tea.TeaError {
+                var b: String = "test"
+                var e: Tea.ReuqestError = error as! Tea.ReuqestError
+            } else {
+                throw error
+            }
+        }
+        defer {
+            var c: String = "test"
+        }
     }
 }

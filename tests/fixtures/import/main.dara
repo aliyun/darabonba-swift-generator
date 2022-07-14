@@ -1,7 +1,9 @@
 import Source;
+import Local;
 
 type @id = [ string ];
 type @str = string;
+type @model = Local.Local;
 
 init(id: [ string ], str: string) {
     @id = id;

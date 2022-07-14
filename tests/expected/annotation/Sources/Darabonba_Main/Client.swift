@@ -1,42 +1,45 @@
 import Foundation
+import Tea
 
 open class Client {
-    protected var _a: String?
+    public var _a: String?
 
-    init() {
+    init() throws -> {
     }
 
-    public func testAPI() -> Void {
-        var _runtime: [String:Any] = []
-        var _lastRequest: Tea.Resquest = nil
-        var _lastException: Tea.SDKRuntimeError = nil
-        var _now: Int32 = Tea.timeNow()
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func testAPI() async throws -> Void {
+        var _runtime: [String: Any] = [:]
+        var _lastRequest: Tea.TeaRequest? = nil
+        var _lastException: Tea.TeaError? = nil
+        var _now: Int32 = Tea.TeaCore.timeNow()
         var _retryTimes: Int32 = 0
-        while (Darabonba.allowRetry(_runtime["retry"], _retryTimes, _now)) {
+        while (Tea.TeaCore.allowRetry(_runtime["retry"], _retryTimes, _now)) {
             if (_retryTimes > 0) {
-                var _backoffTime: Int32 = Darabonba.getBackoffTime(_runtime["backoff"], _retryTimes)
+                var _backoffTime: Int32 = Tea.TeaCore.getBackoffTime(_runtime["backoff"], _retryTimes)
                 if (_backoffTime > 0) {
-                    Darabonba.sleep(_backoffTime)
+                    Tea.TeaCore.sleep(_backoffTime)
                 }
             }
             _retryTimes = _retryTimes + 1
             do {
-                var _request: Tea.Resquest = Tea.Resquest()
+                var _request: Tea.TeaRequest = Tea.TeaRequest()
                 _lastRequest = _request
-                var _response: Tea.Response= Darabonba::doAction(_request, _runtime)
+                var _response: Tea.TeaResponse = try await Tea.TeaCore.doAction(_request, _runtime)
                 return nil
             }
-            catch (Tea.SDKRuntimeError var e: Tea.SDKRuntimeError) {
-                if (Darabonba.isRetryable(e)) {
-                    _lastException = e
+            catch {
+                if (Tea.TeaCore.isRetryable(error)) {
+                    _lastException = error as! Tea.RetryableError
                     continue
                 }
-                throw e
+                throw error
             }
         }
-        throw Tea.RequestUnretryableError(_lastRequest, _lastException)
+        throw Tea.UnretryableError(_lastRequest, _lastException)
     }
 
-    public static func testFunc() -> Void {
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public static func testFunc() async throws -> Void {
     }
 }
