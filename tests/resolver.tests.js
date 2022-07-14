@@ -171,7 +171,7 @@ describe('client resolver should be ok', function () {
       },
       inferred: { type: 'basic', name: 'string' }
     });
-    expect(grammerValue.value.path.length).to.be.eql(1);
+    expect(grammerValue.value.path.length).to.be.eql(2);
 
     grammerValue = code.renderGrammerValue(null, {
       type: 'call',
@@ -181,7 +181,7 @@ describe('client resolver should be ok', function () {
       },
       inferred: { type: 'basic', name: 'string' }
     });
-    expect(grammerValue.value.path.length).to.be.eql(2);
+    expect(grammerValue.value.path.length).to.be.eql(1);
 
     mm(code.combinator, 'addModelInclude', function (modelName) {
       return modelName;

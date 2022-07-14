@@ -1,3 +1,4 @@
 {
-  "darabonba:Import:*": "./libraries"
+  "darabonba:Import:*": "./libraries",
+  "Local": "./pack/"
 }

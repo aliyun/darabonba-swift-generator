@@ -1,16 +1,16 @@
 {
-  "scope": "darabonba",
-  "name": "main",
+  "scope": "alibabacloud",
+  "name": "local",
   "version": "0.0.1",
-  "main": "./main.dara",
-  "libraries": {
-    "Source": "darabonba:Import:*",
-    "Local": "./pack/"
+  "main": "./local.dara",
+  "releases": {
+    "python": "alibabacloud_local:0.0.1",
+    "python2": "alibabacloud_local_py2:0.0.1"
   },
   "swift": {
     "clientName": "Client",
     "packageInfo": {
-      "name": "Package",
+      "name": "Pack",
       "desc": "Darabonba Package SDK",
       "github": "https://github.com/aliyun/package",
       "author": "Alibaba Cloud SDK",

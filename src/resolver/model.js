@@ -33,10 +33,6 @@ class ModelResolver extends BaseResolver {
     combinator.config.emitType = 'model';
 
     object.name = ast.modelName.lexeme;
-    if (config.modelDirName) {
-      config.model.dir = config.modelDirName;
-    }
-    config.layer = config.model.dir;
 
     if (ast.annotation) {
       this.initAnnotation(ast.annotation);

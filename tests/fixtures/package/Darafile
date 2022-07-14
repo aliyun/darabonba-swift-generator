@@ -2,5 +2,15 @@
     "scope": "darabonba",
     "name": "main",
     "version": "0.0.1",
-    "main": "./main.dara"
+    "main": "./main.dara",
+    "swift": {
+        "clientName": "Main",
+        "packageInfo": {
+            "name": "Package",
+            "desc": "Darabonba Package SDK",
+            "github": "https://github.com/aliyun/package",
+            "author": "Alibaba Cloud SDK",
+            "email": "sdk-team@alibabacloud.com"
+        }
+    }
 }

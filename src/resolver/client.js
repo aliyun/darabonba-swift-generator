@@ -65,6 +65,7 @@ const exceptionType = new TypeObject('$Exception');
 const requestType = new TypeObject('$Request');
 const nullType = new TypeNull();
 const unretryableType = new TypeObject('$ExceptionUnretryable');
+const retryableType = new TypeObject('$ExceptionRetryable');
 
 class ClientResolver extends BaseResolver {
   constructor(astNode, combinator, globalAst) {
@@ -146,7 +147,7 @@ class ClientResolver extends BaseResolver {
       const prop = new PropItem();
       prop.name = item.vid.lexeme.replace('@', '_');
       prop.type = this.resolveTypeItem(item.value, item);
-      prop.addModify(Modify.protected());
+      prop.addModify(Modify.public());
       if (item.tokenRange) {
         let comments = this.getFrontComments(item.tokenRange[0]);
         if (comments.length > 0) {
@@ -193,8 +194,9 @@ class ClientResolver extends BaseResolver {
     if (body === null) {
       func.addBodyNode(new GrammerThrows(exceptionType, [], 'Un-implemented'));
     }
+    func.hasThrow = ast.hasThrow;
 
-    if (ast.isAsync) {
+    if (ast.isAsync || ast.type === 'api') {
       func.modify.push(Modify.async());
     }
     if (ast.isStatic) {
@@ -206,6 +208,9 @@ class ClientResolver extends BaseResolver {
       var param = new GrammerValue();
       param.type = this.resolveTypeItem(p.paramType, p);
       param.key = p.paramName.lexeme;
+      if (ast.isStatic) {
+        param.isOptional = true;
+      }
       if (p.needValidate) {
         func.addBodyNode(new GrammerCall('method', [
           { type: 'object', name: param.key },
@@ -226,6 +231,7 @@ class ClientResolver extends BaseResolver {
         });
       } else {
         this.requestBody(ast, body, func);
+        this.currThrows['$Exception'] = exceptionType;
       }
     }
 
@@ -255,14 +261,14 @@ class ClientResolver extends BaseResolver {
 
     // _lastRequest = null;
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_lastRequest', requestType, 'var'),
+      new GrammerVar('_lastRequest', requestType, 'var', false, true),
       Symbol.assign(),
       new GrammerValue('null', null, nullType)
     ));
 
     // _lastException = null;
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_lastException', exceptionType, 'var'),
+      new GrammerVar('_lastException', exceptionType, 'var', false, true),
       Symbol.assign(),
       new GrammerValue('null', null, nullType)
     ));
@@ -356,9 +362,9 @@ class ClientResolver extends BaseResolver {
     ));
 
     let requestTryCatch = new GrammerTryCatch();
-    let exceptionVar = new GrammerVar('e', exceptionType);
+    let exceptionVar = new GrammerVar('error', exceptionType);
     let exceptionParam = new GrammerValue('var', exceptionVar, exceptionType);
-    let catchException = new GrammerException(exceptionType, exceptionVar);
+    let catchException = new GrammerException(null, exceptionVar);
 
     let tryCatch = new GrammerCatch([
       new GrammerCondition('if', [
@@ -370,7 +376,8 @@ class ClientResolver extends BaseResolver {
         new GrammerExpr(
           new GrammerVar('_lastException', exceptionType, 'var'),
           Symbol.assign(),
-          exceptionVar
+          exceptionVar,
+          new GrammerVar('error', retryableType)
         ),
         new GrammerContinue(whileOperation.index)
       ]),
@@ -470,7 +477,7 @@ class ClientResolver extends BaseResolver {
     }
   }
 
-  renderGrammerValue(valGrammer, object, expectedType = null) {
+  renderGrammerValue(valGrammer, object, expectedType = null, canCast = false) {
     if (!valGrammer) {
       valGrammer = new GrammerValue();
     }
@@ -498,6 +505,7 @@ class ClientResolver extends BaseResolver {
         } else if (object.type === 'variable') {
           grammerVar = new GrammerVar(object.id.lexeme, this.resolveTypeItem(object.inferred));
           grammerVar.varType = 'var';
+          grammerVar.needCast = canCast;
         }
         valGrammer.value = grammerVar;
       }
@@ -511,7 +519,6 @@ class ClientResolver extends BaseResolver {
         }
         var exprChild = new GrammerValue(type, val);
         if (field.type === 'expandField') {
-          valGrammer.needCast = true;
           exprChild.isExpand = true;
         }
         if (field.fieldName && field.fieldName.lexeme) {
@@ -531,6 +538,7 @@ class ClientResolver extends BaseResolver {
     } else if (object.type === 'property_access') {
       let last_path_type = this.resolveTypeItem(object.id.inferred || object.inferred);
       let call = new GrammerCall('prop', [], [], last_path_type);
+      call.isOptional = canCast;
       call.addPath({ type: 'object', name: object.id.lexeme, dataType: last_path_type });
       object.propertyPath.forEach((item, i) => {
         var path_name = item.lexeme;
@@ -565,6 +573,7 @@ class ClientResolver extends BaseResolver {
         { type: 'parent', name: '' },
         { type: 'prop', name: object.vid.lexeme },
       ]);
+      valGrammer.needCast = canCast;
       valGrammer.value = call;
     } else if (object.type === 'template_string') {
       valGrammer.type = 'behavior';
@@ -579,7 +588,7 @@ class ClientResolver extends BaseResolver {
       valGrammer.value = behaviorTamplateString;
     } else if (object.type === 'null') {
       valGrammer.type = 'null';
-      valGrammer.value = 'null';
+      valGrammer.value = null;
     } else if (object.type === 'construct_model') {
       let objectName = object.aliasId.lexeme ? object.aliasId.lexeme : '';
       if (object.propertyPath && object.propertyPath.length > 0) {
@@ -618,20 +627,20 @@ class ClientResolver extends BaseResolver {
         valGrammer.type = 'call';
         call_type = 'method';
       }
-      let call = new GrammerCall(call_type);
-
+      let call = new GrammerCall(call_type, undefined, undefined, undefined, object.hasThrow, object.isAsync, object.isStatic, object.isOptional);
       if (object.left) {
         let isStatic = object.isStatic ? true : false;
         let callType = isStatic ? '_static' : '';
         if (object.left.type === 'method_call') {
-          call.addPath({ type: 'parent', name: '' });
           call.addPath({ type: 'call' + callType, name: object.left.id.lexeme });
         } else if (object.left.type === 'instance_call') {
           if (object.left && object.left.id && object.left.id.lexeme) {
             if (object.left.id.type === 'variable') {
               call.addPath({ type: 'object' + callType, name: object.left.id.lexeme });
             } else if (typeof object.left.id.type === 'undefined' && object.left.id.lexeme.indexOf('@') > -1) {
-              call.addPath({ type: 'parent', name: object.left.id.lexeme.replace('@', '_') });
+              call.addPath({ type: 'parent', name: '' });
+              call.addPath({ type: 'prop', name: object.left.id.lexeme });
+              call.isOptional = true;
             } else {
               debug.stack('Unsupported object.left.id.type : ' + object.left.id.type, object);
             }
@@ -659,7 +668,7 @@ class ClientResolver extends BaseResolver {
       }
       if (object.args) {
         object.args.forEach(arg => {
-          const grammerValue = this.renderGrammerValue(null, arg);
+          const grammerValue = this.renderGrammerValue(null, arg, null, true);
           grammerValue.belong = call.index;
           call.addParams(grammerValue);
         });
@@ -699,7 +708,7 @@ class ClientResolver extends BaseResolver {
       this.renderGrammerValue(valGrammer, object);
     } else if (object.type === 'super') {
       valGrammer.type = 'call';
-      let call = new GrammerCall('super');
+      let call = new GrammerCall('super', undefined, undefined, undefined, object.hasThrow, object.isAsync);
       object.args.forEach(arg => {
         call.addParams(this.renderGrammerValue(null, arg));
       });
@@ -736,7 +745,13 @@ class ClientResolver extends BaseResolver {
       }
       call.addPath({ type: 'map', name: accessKey });
       if (object.inferred) {
-        call.returnType = this.resolveTypeItem(object.inferred);
+        let inferred = object.inferred;
+        if (object.propertyPathTypes && object.propertyPathTypes.length) {
+          if (object.propertyPathTypes[object.propertyPathTypes.length - 1].type === 'map') {
+            inferred = object.propertyPathTypes[object.propertyPathTypes.length - 1].keyType;
+          }
+        }
+        call.returnType = this.resolveTypeItem(inferred);
       }
       valGrammer.value = call;
     } else if (object.type === 'array_access') {
@@ -779,7 +794,16 @@ class ClientResolver extends BaseResolver {
       debug.stack('unimpelemented : ' + object.type, object);
     }
     if (object.inferred) {
-      valGrammer.dataType = this.resolveTypeItem(object.inferred);
+      let inferred = object.inferred;
+      if (object.propertyPathTypes && object.propertyPathTypes.length) {
+        if (object.propertyPathTypes[object.propertyPathTypes.length - 1].type === 'map') {
+          inferred = object.propertyPathTypes[object.propertyPathTypes.length - 1].keyType;
+        }
+      }
+      valGrammer.dataType = this.resolveTypeItem(inferred);
+    }
+    if (object.needToReadable) {
+      valGrammer.needToReadable = true;
     }
     if (!valGrammer.dataType) {
       debug.stack('Invalid GrammerValue.dataType', valGrammer, object);
@@ -805,14 +829,23 @@ class ClientResolver extends BaseResolver {
       if (stmt.expectedType) {
         type = this.resolveTypeItem(stmt.expectedType);
       } else if (stmt.expr.inferred) {
-        type = this.resolveTypeItem(stmt.expr.inferred);
+        let inferred = stmt.expr.inferred;
+        if (stmt.expr.propertyPathTypes && stmt.expr.propertyPathTypes.length) {
+          if (stmt.expr.propertyPathTypes[stmt.expr.propertyPathTypes.length - 1].type === 'map') {
+            inferred = stmt.expr.propertyPathTypes[stmt.expr.propertyPathTypes.length - 1].keyType;
+          }
+        }
+        type = this.resolveTypeItem(inferred);
       } else {
         debug.stack(stmt);
       }
       let expectedType = stmt.expectedType ? stmt.expectedType : null;
       assert.strictEqual(true, type instanceof TypeItem);
       let variate = new GrammerVar(stmt.id.lexeme, type);
-      let value = this.renderGrammerValue(null, stmt.expr, expectedType);
+      if (stmt.expr.type === 'null') {
+        variate.isOptional = true;
+      }
+      let value = this.renderGrammerValue(null, stmt.expr, expectedType, true);
       node = new GrammerExpr(variate, Symbol.assign(), value);
     } else if (stmt.type === 'requestAssign') {
       let variate = new GrammerCall('prop', [
@@ -844,18 +877,23 @@ class ClientResolver extends BaseResolver {
       } else if (stmt.expr.type === 'null') {
         node.type = 'null';
       } else if (stmt.expr.type === 'call') {
-        let val = this.renderGrammerValue(null, stmt.expr);
+        let val = this.renderGrammerValue(null, stmt.expr, null, true);
         node.expr = val;
         node.type = 'grammer';
       } else if (_isBasicType(stmt.expr.type)) {
         node.type = stmt.expr.type;
         node.expr = this.renderGrammerValue(null, stmt.expr);
       } else {
-        node.expr = this.renderGrammerValue(null, stmt.expr);
+        node.expr = this.renderGrammerValue(null, stmt.expr, null, true);
         node.type = 'grammer';
       }
       if (stmt.expectedType && stmt.expectedType.type === 'model') {
-        node.expr = new BehaviorToModel(node.expr, stmt.expectedType.name);
+        let expected = '';
+        if (stmt.expectedType.moduleName) {
+          expected += `${stmt.expectedType.moduleName}.`;
+        }
+        expected += stmt.expectedType.name;
+        node.expr = new BehaviorToModel(node.expr, expected);
       }
     } else if (stmt.type === 'throw') {
       this.currThrows['$Error'] = errorType;
@@ -895,7 +933,8 @@ class ClientResolver extends BaseResolver {
       }
     } else if (stmt.type === 'assign') {
       let hasMapAccess = false;
-      const right = this.renderGrammerValue(null, stmt.expr);
+      let expectedType = stmt.expectedType ? stmt.expectedType : null;
+      const right = this.renderGrammerValue(null, stmt.expr, expectedType, true);
       if (stmt.left.type === 'property') {
         hasMapAccess = stmt.left.propertyPathTypes.some(item => item.type === 'map');
         if (hasMapAccess) {
