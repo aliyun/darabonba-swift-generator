@@ -4,7 +4,7 @@ import Tea
 open class Client {
     public var _a: String?
 
-    init() throws -> {
+    public init() throws {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

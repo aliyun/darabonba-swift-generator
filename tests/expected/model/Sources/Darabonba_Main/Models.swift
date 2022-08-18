@@ -178,7 +178,7 @@ public class MyModel : Tea.TeaModel {
 
     public var numberfield: Int?
 
-    public var integerField: Int32?
+    public var integerField: Int?
 
     public var floatField: Double?
 
@@ -541,7 +541,7 @@ public class MyModel : Tea.TeaModel {
             self.numberfield = dict["numberfield"] as! Int
         }
         if dict.keys.contains("integerField") {
-            self.integerField = dict["integerField"] as! Int32
+            self.integerField = dict["integerField"] as! Int
         }
         if dict.keys.contains("floatField") {
             self.floatField = dict["floatField"] as! Double

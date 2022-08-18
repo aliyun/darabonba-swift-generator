@@ -2,7 +2,7 @@ import Foundation
 import Tea
 
 open class Client {
-    init() throws -> {
+    public init() throws {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

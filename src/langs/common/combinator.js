@@ -150,7 +150,7 @@ class BaseCombinator {
     }
   }
 
-  grammer(emit, gram, eol = true, newLine = true) {
+  grammer(emit, gram, eol = true, newLine = true, ignoreCast = false) {
     if (gram instanceof AnnotationItem) {
       this.emitAnnotation(emit, gram);
       return;
@@ -166,7 +166,7 @@ class BaseCombinator {
       debug.stack('Unsupported', gram);
     }
     if (typeof this[method] !== 'undefined') {
-      this[method].call(this, emitter, gram);
+      this[method].call(this, emitter, gram, ignoreCast);
     } else {
       debug.stack('Unimpelemented : ' + method);
     }

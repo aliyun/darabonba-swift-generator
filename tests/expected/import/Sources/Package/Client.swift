@@ -10,9 +10,9 @@ open class Client {
 
     public var _model: Pack.Local?
 
-    init(_ id: [String], _ str: String) throws -> {
-        self._id = id as! [String]
-        self._str = str as! String
+    public init(_ id: [String], _ str: String) throws {
+        self._id = id
+        self._str = str
         throw Tea.ReuqestError([
             "code": "SomeError",
             "messge": "ErrorMessage"
@@ -25,6 +25,6 @@ open class Client {
             "accesskey": "accesskey",
             "region": "region"
         ])
-        client.print(runtime)
+        client.print(runtime as! Import.RuntimeObject)
     }
 }

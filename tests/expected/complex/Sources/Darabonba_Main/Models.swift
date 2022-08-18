@@ -181,7 +181,7 @@ public class ComplexRequest : Tea.TeaModel {
 
     public var stringList: [String]?
 
-    public var intList: [Int32]?
+    public var intList: [Int]?
 
     public var int32List: [Int32]?
 
@@ -495,7 +495,7 @@ public class ComplexRequest : Tea.TeaModel {
             self.stringList = dict["stringList"] as! [String]
         }
         if dict.keys.contains("intList") {
-            self.intList = dict["intList"] as! [Int32]
+            self.intList = dict["intList"] as! [Int]
         }
         if dict.keys.contains("int32List") {
             self.int32List = dict["int32List"] as! [Int32]

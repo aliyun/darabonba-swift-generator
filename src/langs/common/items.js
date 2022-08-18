@@ -71,7 +71,7 @@ class TypeNumber extends TypeBase {
 }
 
 class TypeInteger extends TypeNumber {
-  constructor(length = 16, unsigned = false) {
+  constructor(length, unsigned = false) {
     super();
     // int/uint long/ulong integer
     this.length = length;
@@ -186,7 +186,7 @@ class GrammerNewObject extends Grammer {
 }
 
 class GrammerVar extends Grammer {
-  constructor(name = '', dataType = '', varType = 'var', needCast = false, isOptional = false) {
+  constructor(name = '', dataType = '', varType = 'var', needCast = false, isOptional = false, expected = '') {
     super();
     this.name = name;
     this.type = dataType;      // TypeItem
@@ -195,6 +195,7 @@ class GrammerVar extends Grammer {
     this.isOptional = isOptional;
     this.eol = false;
     this.needToReadable = false;
+    this.expected = expected;
     assert.strictEqual(true, this.type instanceof TypeItem);
   }
 }
@@ -234,11 +235,11 @@ class GrammerCall extends Grammer {
   addPath(path) {
     // {type: '', name: ''}
     const pathType = [
-      'parent', 'object', 'object_static', 'call', 'call_static', 'prop', 'prop_static', 'map', 'list'
+      'parent', 'class', 'object', 'object_static', 'call', 'call_static', 'prop', 'prop_static', 'map', 'list'
     ];
     if (pathType.indexOf(path.type) < 0) {
       throw new Error(
-        `${path.type} path.type should be parent|object|object_static|call|call_static|prop|prop_static|map|list`
+        `${path.type} path.type should be parent|class|object|object_static|call|call_static|prop|prop_static|map|list`
       );
     }
     this.path.push(path);

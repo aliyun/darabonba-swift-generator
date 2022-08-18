@@ -18,7 +18,7 @@ module.exports = {
     'mutating', 'none', 'nonmutating', 'optional', 'override', 'postfix', 'precedence', 'prefix', 'Protocol',
     'required', 'right', 'set', 'Type', 'unowned', 'weak', 'willSet',
     // NSObject prop
-    'hash', 'superclass', 'description', 'debugDescription'
+    'superclass', 'description', 'debugDescription'
   ],
   symbolMap: {
     'ASSIGN': '=',

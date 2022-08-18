@@ -47,18 +47,18 @@ open class Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func helloTestNestReturn(_ a: String?, _ b: String?) async throws -> Bool {
-        return try await equalString(try await helloTest(a), try await helloTest(b))
+        return try await Client.equalString(try await Client.helloTest(a), try await Client.helloTest(b))
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func helloTestNestDeclar(_ a: String?, _ b: String?) async throws -> Bool {
-        var tmp: Bool = try await equalString(try await helloTest(a), try await helloTest(b))
+        var tmp: Bool = try await Client.equalString(try await Client.helloTest(a), try await Client.helloTest(b))
         return tmp as! Bool
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func helloTestNestIf(_ a: String?, _ b: String?) async throws -> Bool {
-        if (try await equalString(try await helloTest(a), try await helloTest(b))) {
+        if (try await Client.equalString(try await Client.helloTest(a), try await Client.helloTest(b))) {
             return true
         }
         return false
@@ -66,7 +66,7 @@ open class Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func helloTestNestFor(_ a: String?, _ b: String?) async throws -> Bool {
-        while (try await equalString(try await helloTest(a), try await helloTest(b))) {
+        while (try await Client.equalString(try await Client.helloTest(a), try await Client.helloTest(b))) {
             return true
         }
         return false
@@ -74,7 +74,7 @@ open class Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func helloTestNestFor1(_ a: String?, _ b: String?) async throws -> Bool {
-        while (try await equalString(try await helloTest(a), try await helloTest(b))) {
+        while (try await Client.equalString(try await Client.helloTest(a), try await Client.helloTest(b))) {
             return true
         }
         return false
@@ -89,6 +89,6 @@ open class Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func throwsFunc2() async throws -> Void {
-        try await throwsFunc1()
+        try await Client.throwsFunc1()
     }
 }

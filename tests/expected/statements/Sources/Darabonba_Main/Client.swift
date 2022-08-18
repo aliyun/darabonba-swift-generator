@@ -4,7 +4,7 @@ import Tea
 open class Client {
     public var _test: String?
 
-    init() throws -> {
+    public init() throws {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -30,7 +30,7 @@ open class Client {
         else {
             true
         }
-        helloIf()
+        Client.helloIf()
         !false
         var a: String? = nil
         a = "string"
@@ -46,10 +46,10 @@ open class Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func helloAsync() async throws -> Void {
-        var test: String = self._test!
+        var test: String = self._test ?? ""
         self._test = "test"
-        helloSync(self._test!)
-        helloDeclare(self._test)
+        helloSync(self._test ?? "")
+        Client.helloDeclare(self._test)
     }
 
     public func helloSync(_ test: String) -> Void {

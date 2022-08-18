@@ -1,5 +1,9 @@
 type @test = string
 
+model M = {
+  a: map[string]string,
+}
+
 static function helloIf(): void {
   if (true) {
   }

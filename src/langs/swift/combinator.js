@@ -33,6 +33,8 @@ const {
   TypeMap,
   TypeString,
   TypeGeneric,
+  BehaviorToModel,
+  TypeInteger,
 } = require('../common/items');
 
 class Combinator extends CombinatorBase {
@@ -197,7 +199,7 @@ class Combinator extends CombinatorBase {
       if (is.func(node)) {
         this.emitFunc(emitter, node);
       } else if (is.construct(node)) {
-        this.emitConstruct(emitter, node);
+        this.emitConstruct(emitter, node, object.extends.length > 0);
       } else if (is.prop(node)) {
         this.emitProp(emitter, node);
       } else if (is.annotation(node)) {
@@ -234,7 +236,7 @@ class Combinator extends CombinatorBase {
     } else if (is.decimal(type)) {
       type_str = 'Double';
     } else if (is.integer(type)) {
-      type_str = type.length > 32 ? 'Int64' : 'Int32';
+      type_str = !type.length ? 'Int' : type.length > 32 ? 'Int64' : 'Int32';
     } else if (is.number(type)) {
       type_str = 'Int';
     } else if (is.string(type)) {
@@ -276,8 +278,8 @@ class Combinator extends CombinatorBase {
 
   }
 
-  emitConstruct(emitter, node) {
-    emitter.emitln(`init(${this.resolveFuncParams(node.params)}) throws -> {`, this.level);
+  emitConstruct(emitter, node, hasExtends) {
+    emitter.emitln(`public${hasExtends ? ' override ' : ' '}init(${this.resolveFuncParams(node.params)}) throws {`, this.level);
     this.levelUp();
     node.body.forEach(element => {
       this.grammer(emitter, element);
@@ -325,7 +327,7 @@ class Combinator extends CombinatorBase {
 
   // TODO emitFuncComment
 
-  emitMap(emitter, gram, layer = 0) {
+  emitMap(emitter, gram) {
     let items = [];
     let expandItems = [];
     if (!Array.isArray(gram.value) && !(gram.value instanceof GrammerValue)) {
@@ -361,7 +363,7 @@ class Combinator extends CombinatorBase {
     if (expandItems.length) {
       expandItems.forEach((item, index) => {
         let emit = new Emitter(this.config);
-        this.grammer(emit, item, false, false);
+        this.grammer(emit, item, false, false, true);
         emitter.emit(`, ${emit.output}`);
       });
     }
@@ -411,8 +413,11 @@ class Combinator extends CombinatorBase {
     let tmp = [];
     params.forEach((p) => {
       let emitter = new Emitter(this.config);
-      this.grammer(emitter, p, false, false);
-      tmp.push(isStatic ? emitter.output.replace('!', '').split(' as', 2)[0] : emitter.output.split(' as', 2)[0]);
+      if (isStatic) {
+        p.needCast = false;
+      }
+      this.grammer(emitter, p, false, false, isStatic);
+      tmp.push(emitter.output);
     });
     return tmp.join(', ');
   }
@@ -438,12 +443,13 @@ class Combinator extends CombinatorBase {
     let res = [];
     let resolver = {
       parent: () => res = ['self'],
-      object: (p) => res.push(`.${this.resolveName(p.name)}${grammer.isOptional ? SEPARATOR : ''}`),
+      class: () => res = [`${this.config.client.name || 'Client'}`],
+      object: (p) => res.push(`.${this.resolveName(p.name)}${p.needCast ? SEPARATOR : ''}`),
       object_static: (p) => res.push(`.${this.resolveName(p.name)}`),
-      call: (p) => res.push(`.${p.name}${grammer.isOptional ? SEPARATOR : ''}(${params})`),
+      call: (p) => res.push(`.${p.name}(${params})`),
       call_static: (p) => res.push(`.${this.resolveName(p.name)}(${params})`),
-      prop: (p) => res.push(`.${p.name[0] === '@' ? this.resolveName(p.name) : p.name}${grammer.isOptional ? SEPARATOR : ''}`),
-      prop_static: (p) => res.push(`.${p.name[0] === '@' ? this.resolveName(p.name) : p.name}`),
+      prop: (p) => res.push(`.${this.resolveName(p.name)}${p.needCast ? SEPARATOR : ''}`),
+      prop_static: (p) => res.push(`.${this.resolveName(p.name)}`),
       map: (p) => {
         if (is.grammer(p.name)) {
           res.push(`[${this.gramRender(p.name)}]`);
@@ -475,7 +481,7 @@ class Combinator extends CombinatorBase {
   }
 
   /**************************************** grammer ****************************************/
-  grammerVar(emitter, gram, emitType = true) {
+  grammerVar(emitter, gram, ignoreCast, emitType = true) {
     let name = gram.name ? gram.name : gram.key;
     name = _name(name);
     let st = gram.varType === 'var' ? 'var' : 'let';
@@ -489,10 +495,18 @@ class Combinator extends CombinatorBase {
         if (gram.needToReadable) {
           emitter.emit(`${this.config.tea.core.name}.${this.config.tea.core.toReadable}(`);
         }
+        var resolve = false;
+        if (gram.expected instanceof TypeInteger && gram.type instanceof TypeInteger) {
+          emitter.emit(`${this.emitType(gram.expected)}(`);
+          resolve = true;
+        }
         emitter.emit(`${name}`);
+        if (resolve) {
+          emitter.emit(')');
+        }
         if (gram.needToReadable) {
           emitter.emit(')');
-        } else if (gram.type && gram.needCast) {
+        } else if (!resolve && !ignoreCast && gram.type && gram.needCast) {
           emitter.emit(` as! ${this.emitType(gram.type)}`);
         }
       }
@@ -504,7 +518,7 @@ class Combinator extends CombinatorBase {
     }
   }
 
-  grammerValue(emitter, gram, layer = 0) {
+  grammerValue(emitter, gram, ignoreCast) {
     if (is.annotation(gram)) {
       this.emitAnnotation(emitter, gram);
       return;
@@ -518,14 +532,14 @@ class Combinator extends CombinatorBase {
           new TypeString(), new TypeGeneric()
         );
       }
-      this.emitMap(emitter, gram, layer);
+      this.emitMap(emitter, gram);
     } else if (gram.type === 'string') {
       emitter.emit(`"${gram.value}"`);
     } else if (gram.type === 'null') {
       emitter.emit('nil');
     } else if (gram.type === 'behavior' || gram.type === 'call'
       || gram.type === 'var' || gram.type === 'instance') {
-      this.grammer(emitter, gram.value, false, false);
+      this.grammer(emitter, gram.value, false, false, ignoreCast);
     } else if (gram.type === 'number' || gram.type === 'param' || gram.type === 'bool') {
       emitter.emit(gram.value);
     } else if (gram.type === 'expr') {
@@ -566,7 +580,15 @@ class Combinator extends CombinatorBase {
       debug.stack(gram);
     }
     if (gram.dataType && gram.needCast) {
-      emitter.emit('!');
+      if (is.array(gram.dataType)) {
+        emitter.emit(' ?? []');
+      } else if (is.map(gram.dataType)) {
+        emitter.emit(' ?? [:]');
+      } else if (is.string(gram.dataType)) {
+        emitter.emit(' ?? ""');
+      } else {
+        emitter.emit('!');
+      }
     }
     if (gram.needToReadable) {
       emitter.emit(')');
@@ -599,7 +621,7 @@ class Combinator extends CombinatorBase {
     }
   }
 
-  grammerExpr(emitter, gram) {
+  grammerExpr(emitter, gram, ignoreCast) {
     if (!gram.left && !gram.right) {
       emitter.emit(` ${_symbol(gram.opt)} `);
       return;
@@ -607,7 +629,7 @@ class Combinator extends CombinatorBase {
     this.grammer(emitter, gram.left, false, false);
     emitter.emit(` ${_symbol(gram.opt)} `);
     this.grammer(emitter, gram.right, false, false);
-    if (gram.as) {
+    if (gram.as && !ignoreCast) {
       emitter.emit(` as! ${this.emitType(gram.as.type)}`);
     }
   }
@@ -763,8 +785,11 @@ class Combinator extends CombinatorBase {
   }
 
   grammerReturn(emitter, gram) {
+    if (gram.expr instanceof BehaviorToModel) {
+      this.behaviorToModel(emitter, gram.expr);
+      return;
+    }
     emitter.emit('return ');
-
     if (gram.type === 'null') {
       this.grammerValue(emitter, new GrammerValue('null'));
     } else if (gram.type === 'grammer') {
@@ -810,10 +835,11 @@ class Combinator extends CombinatorBase {
   }
 
   behaviorToModel(emitter, behavior) {
-    emitter.emit(`${this.config.tea.converter.name}.${this.config.tea.model.fromMap}(`);
-    emitter.emit(`${this.addModelInclude(behavior.expected)}(), `);
+    emitter.emit('var tmp: [String: Any] = ');
     this.grammer(emitter, behavior.grammer, false, false);
-    emitter.emit(')');
+    emitter.emit('\n');
+    emitter.emit(`return ${this.config.tea.converter.name}.${this.config.tea.model.fromMap}(`, this.level);
+    emitter.emit(`${this.addModelInclude(behavior.expected)}(), tmp)`);
   }
 
   behaviorSetMapItem(emitter, behavior) {

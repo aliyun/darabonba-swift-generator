@@ -6,7 +6,7 @@ open class Client {
 
     public var _a: [String]?
 
-    init() throws -> {
+    public init() throws {
         var str: String = "sss"
         var modelInstance: Test1 = Test1([
             "test": "test",
@@ -46,11 +46,11 @@ open class Client {
                     "undefined": ,
                     "test2": "test2"
                 ])
-                var num: Int32 = 123
-                staticFunc()
+                var num: Int = 123
+                Client.staticFunc()
                 _lastRequest = _request
                 var _response: Tea.TeaResponse = try await Tea.TeaCore.doAction(_request, _runtime)
-                try await testFunc("test", true)
+                try await Client.testFunc("test", true)
                 return nil
             }
             catch {

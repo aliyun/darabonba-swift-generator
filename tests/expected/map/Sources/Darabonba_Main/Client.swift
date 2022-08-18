@@ -5,7 +5,7 @@ import DarabonbaImport
 open class Client : DarabonbaImport.Client {
     public var _test: String?
 
-    init(_ config: DarabonbaImport.Config) throws -> {
+    public override init(_ config: DarabonbaImport.Config) throws {
         try super.init(config)
         self._endpointRule = "central"
         self._endpointMap = [
@@ -18,7 +18,7 @@ open class Client : DarabonbaImport.Client {
         self._test = "test"
         var b: B = B([:])
         for a in b.mm {
-            a.m[a.str]
+            a.m[a.str ?? ""]
         }
         test(nil)
     }

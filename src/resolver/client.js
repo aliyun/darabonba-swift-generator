@@ -57,7 +57,7 @@ const assert = require('assert');
 
 const systemPackage = ['Util'];
 
-const int16 = new TypeInteger(16);
+const int32 = new TypeInteger(32);
 const genericType = new TypeGeneric();
 const runtimeType = new TypeMap(new TypeString(), genericType);
 const errorType = new TypeObject('$Error');
@@ -275,16 +275,16 @@ class ClientResolver extends BaseResolver {
 
     // _now = Date.now();
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_now', int16),
+      new GrammerVar('_now', int32),
       Symbol.assign(),
-      new GrammerValue('behavior', new BehaviorTimeNow(), int16)
+      new GrammerValue('behavior', new BehaviorTimeNow(), int32)
     ));
 
     // let _retryTimes = 0;
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_retryTimes', int16, 'var'),
+      new GrammerVar('_retryTimes', int32, 'var'),
       Symbol.assign(),
-      new GrammerValue('number', 0, int16)
+      new GrammerValue('number', 0, int32)
     ));
 
     let whileOperation = new GrammerCondition('while');
@@ -297,22 +297,22 @@ class ClientResolver extends BaseResolver {
           { type: 'object', name: this.config.runtime },
           { type: 'map', name: 'retry' }
         ], [], genericType)),
-        new GrammerValue('param', '_retryTimes', int16),
-        new GrammerValue('param', '_now', int16),
+        new GrammerValue('param', '_retryTimes', int32),
+        new GrammerValue('param', '_now', int32),
       ], new TypeBool())
     );
 
     let retryTimesIf = new GrammerCondition('if');
     retryTimesIf.addCondition(
       new GrammerExpr(
-        new GrammerVar('_retryTimes', int16),
+        new GrammerVar('_retryTimes', int32),
         Symbol.greater(),
-        new GrammerValue('number', 0, int16)
+        new GrammerValue('number', 0, int32)
       )
     );
     retryTimesIf.addBodyNode(
       new GrammerExpr(
-        new GrammerVar('_backoffTime', int16),
+        new GrammerVar('_backoffTime', int32),
         Symbol.assign(),
         new GrammerCall('method', [
           { type: 'object_static', name: '$Core' },
@@ -322,17 +322,17 @@ class ClientResolver extends BaseResolver {
             { type: 'object', name: this.config.runtime },
             { type: 'map', name: 'backoff' }
           ]), genericType),
-          new GrammerValue('param', '_retryTimes', int16),
-        ], int16)
+          new GrammerValue('param', '_retryTimes', int32),
+        ], int32)
       )
     );
 
     let backoffTimeIf = new GrammerCondition('if');
-    let backoffTimeValue = new GrammerValue('number', 0, int16);
-    backoffTimeValue.dataType = int16;
+    let backoffTimeValue = new GrammerValue('number', 0, int32);
+    backoffTimeValue.dataType = int32;
     backoffTimeIf.addCondition(
       new GrammerExpr(
-        new GrammerVar('_backoffTime', int16),
+        new GrammerVar('_backoffTime', int32),
         Symbol.greater(),
         backoffTimeValue
       )
@@ -342,20 +342,20 @@ class ClientResolver extends BaseResolver {
         { type: 'object_static', name: '$Core' },
         { type: 'call_static', name: this.config.tea.core.sleep }
       ], [
-        new GrammerValue('param', '_backoffTime', int16),
+        new GrammerValue('param', '_backoffTime', int32),
       ])
     );
 
     retryTimesIf.addBodyNode(backoffTimeIf);
     whileOperation.addBodyNode(retryTimesIf);
 
-    let retryTimesValue = new GrammerValue('number', 1, int16);
-    retryTimesValue.dataType = int16;
+    let retryTimesValue = new GrammerValue('number', 1, int32);
+    retryTimesValue.dataType = int32;
     whileOperation.addBodyNode(new GrammerExpr(
-      new GrammerVar('_retryTimes', int16),
+      new GrammerVar('_retryTimes', int32),
       Symbol.assign(),
       new GrammerExpr(
-        new GrammerVar('_retryTimes', int16),
+        new GrammerVar('_retryTimes', int32),
         Symbol.plus(),
         retryTimesValue
       )
@@ -506,6 +506,7 @@ class ClientResolver extends BaseResolver {
           grammerVar = new GrammerVar(object.id.lexeme, this.resolveTypeItem(object.inferred));
           grammerVar.varType = 'var';
           grammerVar.needCast = canCast;
+          grammerVar.expected = expectedType ? this.resolveTypeItem(expectedType) : null;
         }
         valGrammer.value = grammerVar;
       }
@@ -524,7 +525,7 @@ class ClientResolver extends BaseResolver {
         if (field.fieldName && field.fieldName.lexeme) {
           exprChild.key = field.fieldName.lexeme;
         }
-        this.renderGrammerValue(exprChild, field.expr, expectedType);
+        this.renderGrammerValue(exprChild, field.expr, expectedType, true);
         this.findComments(valGrammer, field);
         valGrammer.value.push(exprChild);
         this.findComments(valGrammer, field.expr, 'back');
@@ -538,8 +539,11 @@ class ClientResolver extends BaseResolver {
     } else if (object.type === 'property_access') {
       let last_path_type = this.resolveTypeItem(object.id.inferred || object.inferred);
       let call = new GrammerCall('prop', [], [], last_path_type);
-      call.isOptional = canCast;
-      call.addPath({ type: 'object', name: object.id.lexeme, dataType: last_path_type });
+      var model = false;
+      if (object.id.lexeme !== '__request' && object.id.lexeme !== '__response') {
+        model = canCast;
+      }
+      call.addPath({ type: 'object', name: object.id.lexeme, dataType: last_path_type, needCast: model });
       object.propertyPath.forEach((item, i) => {
         var path_name = item.lexeme;
         let path_type = this.resolveTypeItem(object.propertyPathTypes[i]);
@@ -553,7 +557,11 @@ class ClientResolver extends BaseResolver {
         } else {
           debug.stack(last_path_type);
         }
-        call.addPath({ type: call_type, name: path_name, dataType: path_type });
+        var resolve = false;
+        if (i !== (object.propertyPath.length - 1)) {
+          resolve = true;
+        }
+        call.addPath({ type: call_type, name: path_name, dataType: path_type, needCast: model && resolve });
         last_path_type = path_type;
       });
 
@@ -563,6 +571,7 @@ class ClientResolver extends BaseResolver {
         valGrammer.type = 'behavior';
         valGrammer.value = new BehaviorToMap(valGrammer.value, object.inferred);
       }
+      valGrammer.needCast = model;
     } else if (object.type === 'number') {
       valGrammer.type = 'number';
       valGrammer.value = object.value.value;
@@ -573,6 +582,7 @@ class ClientResolver extends BaseResolver {
         { type: 'parent', name: '' },
         { type: 'prop', name: object.vid.lexeme },
       ]);
+      // call.isOptional = true;
       valGrammer.needCast = canCast;
       valGrammer.value = call;
     } else if (object.type === 'template_string') {
@@ -632,6 +642,9 @@ class ClientResolver extends BaseResolver {
         let isStatic = object.isStatic ? true : false;
         let callType = isStatic ? '_static' : '';
         if (object.left.type === 'method_call') {
+          if (isStatic) {
+            call.addPath({ type: 'class', name: '' });
+          }
           call.addPath({ type: 'call' + callType, name: object.left.id.lexeme });
         } else if (object.left.type === 'instance_call') {
           if (object.left && object.left.id && object.left.id.lexeme) {
@@ -639,8 +652,7 @@ class ClientResolver extends BaseResolver {
               call.addPath({ type: 'object' + callType, name: object.left.id.lexeme });
             } else if (typeof object.left.id.type === 'undefined' && object.left.id.lexeme.indexOf('@') > -1) {
               call.addPath({ type: 'parent', name: '' });
-              call.addPath({ type: 'prop', name: object.left.id.lexeme });
-              call.isOptional = true;
+              call.addPath({ type: 'prop', name: object.left.id.lexeme, needCast: true });
             } else {
               debug.stack('Unsupported object.left.id.type : ' + object.left.id.type, object);
             }
@@ -717,7 +729,7 @@ class ClientResolver extends BaseResolver {
       valGrammer.type = 'call';
       let accessKey;
       if (object.accessKey.inferred) {
-        accessKey = this.renderGrammerValue(null, object.accessKey);
+        accessKey = this.renderGrammerValue(null, object.accessKey, null, true);
       } else if (object.accessKey.type === 'variable') {
         accessKey = object.accessKey.id.lexeme;
       } else if (object.accessKey.type === 'string') {
@@ -734,11 +746,11 @@ class ClientResolver extends BaseResolver {
         for (let i = 0; i < object.propertyPath.length; i++) {
           if (current.type === 'model') {
             call.type = 'prop';
-            call.addPath({ type: 'prop', name: object.propertyPath[i].lexeme });
+            call.addPath({ type: 'prop', name: object.propertyPath[i].lexeme, needCast: canCast });
           } else if (current.type === 'array') {
-            call.addPath({ type: 'list', name: object.propertyPath[i].lexeme });
+            call.addPath({ type: 'list', name: object.propertyPath[i].lexeme, needCast: canCast });
           } else {
-            call.addPath({ type: 'map', name: object.propertyPath[i].lexeme });
+            call.addPath({ type: 'map', name: object.propertyPath[i].lexeme, needCast: canCast });
           }
           current = object.propertyPathTypes[i];
         }
@@ -754,6 +766,7 @@ class ClientResolver extends BaseResolver {
         call.returnType = this.resolveTypeItem(inferred);
       }
       valGrammer.value = call;
+      valGrammer.needCast = canCast;
     } else if (object.type === 'array_access') {
       valGrammer.type = 'call';
       let accessKey;
@@ -794,13 +807,7 @@ class ClientResolver extends BaseResolver {
       debug.stack('unimpelemented : ' + object.type, object);
     }
     if (object.inferred) {
-      let inferred = object.inferred;
-      if (object.propertyPathTypes && object.propertyPathTypes.length) {
-        if (object.propertyPathTypes[object.propertyPathTypes.length - 1].type === 'map') {
-          inferred = object.propertyPathTypes[object.propertyPathTypes.length - 1].keyType;
-        }
-      }
-      valGrammer.dataType = this.resolveTypeItem(inferred);
+      valGrammer.dataType = this.resolveTypeItem(object.inferred);
     }
     if (object.needToReadable) {
       valGrammer.needToReadable = true;
@@ -933,8 +940,15 @@ class ClientResolver extends BaseResolver {
       }
     } else if (stmt.type === 'assign') {
       let hasMapAccess = false;
-      let expectedType = stmt.expectedType ? stmt.expectedType : null;
-      const right = this.renderGrammerValue(null, stmt.expr, expectedType, true);
+      let expectedType = stmt.expectedType ? stmt.expectedType : stmt.left.inferred ? stmt.left.inferred.name || stmt.left.inferred : null;
+      let needCast = true;
+      if (stmt.left.type === 'virtualVariable' || stmt.left.type === 'property') {
+        needCast = false;
+        if (stmt.left.id && (stmt.left.id.lexeme === '__request' || stmt.left.id.lexeme === '__response')) {
+          needCast = true;
+        }
+      }
+      const right = this.renderGrammerValue(null, stmt.expr, expectedType, needCast);
       if (stmt.left.type === 'property') {
         hasMapAccess = stmt.left.propertyPathTypes.some(item => item.type === 'map');
         if (hasMapAccess) {

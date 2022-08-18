@@ -11,7 +11,7 @@ open class Client : DarabonbaImport.Client {
 
     public var _configs: [DarabonbaImport.Config]?
 
-    init(_ config: DarabonbaImport.Config) throws -> {
+    public override init(_ config: DarabonbaImport.Config) throws {
         try super.init(config)
         _configs[0] = config as! DarabonbaImport.Config
     }
@@ -44,45 +44,45 @@ open class Client : DarabonbaImport.Client {
                 var modelMapVal: [String: ComplexRequest] = [:]
                 var subModelMapVal: [String: ComplexRequest.Header] = [:]
                 var version: String = "/" + "2019-01-08" + self._pathname
-                var mapAccess: String = _API[version]
+                var mapAccess: String = _API[version as! String] ?? ""
                 var reqMap: [String: ComplexRequest]? = nil
                 var mapString: [String: String] = [
-                    "str": request.accessKey
+                    "str": request.accessKey ?? ""
                 ]
-                var inte: Int32 = 1
-                var a: Int32 = 1
+                var inte: Int = 1
+                var a: Int = 1
                 var b: Int32? = nil
-                b = a as! Int32
-                var c: Int32 = a as! Int32
-                intToInt32(a)
+                b = Int32(a)
+                var c: Int32 = Int32(a)
+                Client.intToInt32(a)
                 var mapVal: [String: Any] = [
-                    "read": read,
+                    "read": read as! InputStream,
                     "test": "{"test":"ok"}",
-                    "b": request.b,
-                    "num": request.Num,
-                    "u16": request.u16,
-                    "u32": request.u32,
-                    "u64": request.u64,
-                    "u16List": request.uint16List,
-                    "u32List": request.uint32List,
-                    "u64List": request.uint64List,
-                    "i64List": request.int64List,
-                    "i16List": request.int16List,
-                    "i32List": request.int32List,
-                    "intList": request.intList,
-                    "stringList": request.stringList,
-                    "i32": request.i32,
-                    "booleantList": request.booleantList,
-                    "floatList": request.floatList,
-                    "float64List": request.f64List,
-                    "f32": request.f32,
-                    "f64": request.f64,
-                    "i64": request.i64
+                    "b": request.b!,
+                    "num": request.Num!,
+                    "u16": request.u16!,
+                    "u32": request.u32!,
+                    "u64": request.u64!,
+                    "u16List": request.uint16List ?? [],
+                    "u32List": request.uint32List ?? [],
+                    "u64List": request.uint64List ?? [],
+                    "i64List": request.int64List ?? [],
+                    "i16List": request.int16List ?? [],
+                    "i32List": request.int32List ?? [],
+                    "intList": request.intList ?? [],
+                    "stringList": request.stringList ?? [],
+                    "i32": request.i32!,
+                    "booleantList": request.booleantList ?? [],
+                    "floatList": request.floatList ?? [],
+                    "float64List": request.f64List ?? [],
+                    "f32": request.f32!,
+                    "f64": request.f64!,
+                    "i64": request.i64!
                 ]
                 var req: ComplexRequest = ComplexRequest([
                     "b": false,
                     "Num": 10,
-                    "i32": a,
+                    "i32": a as! Int,
                     "intList": [
                         10,
                         11
@@ -96,22 +96,22 @@ open class Client : DarabonbaImport.Client {
                         false
                     ]
                 ])
-                self._Strs = request.strs!
-                _endpointMap[self._protocol]
+                self._Strs = request.strs
+                _endpointMap[self._protocol ?? ""]
                 _endpointMap["test"] = "ok";
-                request.strs = self._Strs!
-                _request.protocol = self._protocol!
+                request.strs = self._Strs
+                _request.protocol_ = self._protocol ?? ""
                 _request.port = 80
                 _request.method = "GET"
                 _request.pathname = "/" + self._pathname
                 _request.query = DarabonbaImport.Client.query(Tea.TeaConverter.merge([
                     "date": "2019",
-                    "access": mapAccess,
-                    "test": mapVal["test"]
-                ], request.header))
+                    "access": mapAccess as! String,
+                    "test": mapVal["test"]!
+                ], request.header!))
                 _request.body = DarabonbaImport.Client.body()
                 var tmp: [String: Any] = Tea.TeaConverter.merge([:], _request.query, _request.headers, _request)
-                client.print(request, req.accessKey!)
+                client.print(request, req.accessKey ?? "")
                 _lastRequest = _request
                 var _response: Tea.TeaResponse = try await Tea.TeaCore.doAction(_request, _runtime)
                 if (true && true) {
@@ -127,7 +127,8 @@ open class Client : DarabonbaImport.Client {
                     "2"
                 ], nil)
                 try await hello(nil, nil, nil)
-                return Tea.TeaConverter.fromMap(DarabonbaImport.RuntimeObject(), [:])
+                var tmp: [String: Any] = [:]
+                return Tea.TeaConverter.fromMap(DarabonbaImport.RuntimeObject(), tmp)
                 try await Complex3(nil)
                 return nil
             }
@@ -149,14 +150,14 @@ open class Client : DarabonbaImport.Client {
         var name: String = "complex"
         var config: DarabonbaImport.Config = DarabonbaImport.Config([:])
         var client: DarabonbaImport.Client = DarabonbaImport.Client(config)
-        _request.protocol = "HTTP"
+        _request.protocol_ = "HTTP"
         _request.port = 80
         _request.method = "GET"
         _request.pathname = "/"
         _request.query = DarabonbaImport.Client.query([
             "date": "2019",
             "version": "2019-01-08",
-            "protocol": _request.protocol
+            "protocol": _request.protocol_
         ])
         _request.body = DarabonbaImport.Client.body()
         var _lastRequest: Tea.TeaRequest = _request
@@ -199,7 +200,7 @@ open class Client : DarabonbaImport.Client {
         try request.validate()
         var _request: Tea.TeaRequest = Tea.TeaRequest()
         var name: String = "complex"
-        _request.protocol = try await TemplateString()
+        _request.protocol_ = try await TemplateString()
         _request.port = 80
         _request.method = "GET"
         _request.pathname = "/"
@@ -213,30 +214,32 @@ open class Client : DarabonbaImport.Client {
         var temp_str: String = "test " + String(100) + " " + String(true)
         var resp: Tea.TeaResponse = _response as! Tea.TeaResponse
         var req: DarabonbaImport.Request = DarabonbaImport.Request([
-            "accesskey": request.accessKey,
-            "region": resp.statusMessage
+            "accesskey": request.accessKey ?? "",
+            "region": resp.statusMessage ?? ""
         ])
-        array0(request)
+        Client.array0(request)
         req.accesskey = "accesskey"
-        req.accesskey = request.accessKey!
+        req.accesskey = request.accessKey
         DarabonbaImport.Client.parse(ComplexRequest)
         DarabonbaImport.Client.array(request, "1")
         try await DarabonbaImport.Client.asyncFunc()
         try await tryCatch()
         try throwsFunc()
         _response.statusCode
-        return Tea.TeaConverter.fromMap(ComplexRequest(), Tea.TeaConverter.merge([:], _request.query))
+        var tmp: [String: Any] = Tea.TeaConverter.merge([:], _request.query)
+        return Tea.TeaConverter.fromMap(ComplexRequest(), tmp)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func hello(_ request: [String: Any], _ strs: [String], _ complexList: [[String]]) async throws -> [String] {
         var a: [[String]]? = nil
-        return array1()
+        return Client.array1()
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func print(_ reqeust: Tea.TeaRequest?, _ reqs: [ComplexRequest]?, _ response: Tea.TeaResponse?, _ val: [String: String]?) async throws -> DarabonbaImport.Request {
-        return Tea.TeaConverter.fromMap(DarabonbaImport.Request(), [:])
+        var tmp: [String: Any] = [:]
+        return Tea.TeaConverter.fromMap(DarabonbaImport.Request(), tmp)
     }
 
     public static func intToInt32(_ a: Int32?) throws -> Void {
@@ -311,7 +314,7 @@ open class Client : DarabonbaImport.Client {
             ]
         ]
         data["configs"][3] = config as! String
-        return data["configs"]
+        return data["configs"] ?? []
     }
 
     public static func arrayAssign3(_ request: ComplexRequest?, _ config: String?) -> Void {
@@ -319,12 +322,12 @@ open class Client : DarabonbaImport.Client {
     }
 
     public static func mapAccess(_ request: ComplexRequest?) -> String {
-        var configInfo: String = request.configs.extra["name"]
+        var configInfo: String = request.configs!.extra!["name"] ?? ""
         return configInfo as! String
     }
 
     public static func mapAccess2(_ request: DarabonbaImport.Request?) -> String {
-        var configInfo: String = request.configs.extra["name"]
+        var configInfo: String = request.configs!.extra!["name"] ?? ""
         return configInfo as! String
     }
 
@@ -334,13 +337,13 @@ open class Client : DarabonbaImport.Client {
                 "value": "string"
             ]
         ]
-        return data["configs"]["value"]
+        return data["configs"]["value"] ?? ""
     }
 
     public static func mapAccess4(_ request: ComplexRequest?) -> String {
         var key: String = "name"
-        var model: String = request.modelMap[key]
-        var configInfo: String = request.configs.extra[key]
+        var model: String = request.modelMap![key as! String]!
+        var configInfo: String = request.configs!.extra![key as! String] ?? ""
         return configInfo as! String
     }
 

@@ -161,7 +161,7 @@ class BaseResolver {
       } else if (_isBasicType(typeNode.type)) {
         return this.resolveTypeItem(typeNode.type, typeNode);
       } else if (typeNode.type === 'basic') {
-        return this.resolveTypeItem(typeNode.name, sourceNode);
+        return this.resolveTypeItem(typeNode.name || 'null', sourceNode);
       } else if (typeNode.type === 'model') {
         let name = typeNode.name;
         if (typeNode.moduleName) {
