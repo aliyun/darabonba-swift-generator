@@ -1,6 +1,6 @@
 {
   "name": "@darabonba/swift-generator",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "The SDK generator for Swift",
   "main": "src/generator",
   "directories": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:aliyun/darabonba-swift-generator.git"
+    "url": "git@github.com:aliyun/swift-generator.git"
   },
   "author": "Alibaba Cloud OpenAPI Team",
   "license": "Apache-2.0",
