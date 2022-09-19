@@ -33,6 +33,7 @@ class PackageInfo extends BasePackageInfo {
     this.cartfile();
     this.packageManage();
     this.podspec();
+    this.podfile();
     this.others();
     if (this.config.withTest) {
       this.tests();
@@ -170,6 +171,26 @@ class PackageInfo extends BasePackageInfo {
         desc: this.packageInfo.desc || `${this.scope} ${this.package} SDK for Swift`,
         homepage: this.packageInfo.github || `https://github.com/${this.scope}/${this.package}.git`,
         author: author,
+        podspecDependencies: emitter.output
+      }
+    );
+  }
+
+  podfile() {
+    let emitter = new Emitter(this.config);
+
+    Object.keys(this.dependencies).forEach(key => {
+      const item = this.dependencies[key];
+      const meta = item.meta;
+      let version = getReleaseVersion(meta);
+      let package_name = `${_upperFirst(_camelCase(_name(item.package_name)))}`;
+      emitter.emitln(`  pod '${package_name}',  '~> ${version}'`);
+    });
+
+    this.renderAuto(
+      path.join(__dirname, './files/Podfile.tmpl'),
+      path.join(this.config.dir, 'Podfile'), {
+        name: this.package,
         podspecDependencies: emitter.output
       }
     );
