@@ -348,6 +348,10 @@ class Combinator extends CombinatorBase {
       this.levelUp();
       items.forEach((item, index) => {
         let emit = new Emitter(this.config);
+        if (item instanceof AnnotationItem) {
+          this.emitAnnotation(emit, item, 0);
+          return;
+        }
         this.grammer(emit, item, false, false);
         emitter.emit(`"${item.key}": ${emit.output}`, this.level);
         if (index !== items.length - 1) {
@@ -363,6 +367,10 @@ class Combinator extends CombinatorBase {
     if (expandItems.length) {
       expandItems.forEach((item, index) => {
         let emit = new Emitter(this.config);
+        if (item instanceof AnnotationItem) {
+          this.emitAnnotation(emit, item, 0);
+          return;
+        }
         this.grammer(emit, item, false, false, true);
         emitter.emit(`, ${emit.output}`);
       });

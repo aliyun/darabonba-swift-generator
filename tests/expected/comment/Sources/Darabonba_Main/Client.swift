@@ -10,9 +10,7 @@ open class Client {
         var str: String = "sss"
         var modelInstance: Test1 = Test1([
             "test": "test",
-            "undefined": ,
             "test2": "test2",
-            "undefined": 
         ])
         var array: [Any] = [
             "string",
@@ -23,8 +21,6 @@ open class Client {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func testAPI() async throws -> Void {
         var _runtime: [String: Any] = [
-            "undefined": ,
-            "undefined": 
         ]
         var _lastRequest: Tea.TeaRequest? = nil
         var _lastException: Tea.TeaError? = nil
@@ -41,9 +37,7 @@ open class Client {
             do {
                 var _request: Tea.TeaRequest = Tea.TeaRequest()
                 var modelInstance: Test1 = Test1([
-                    "undefined": ,
                     "test": "test",
-                    "undefined": ,
                     "test2": "test2"
                 ])
                 var num: Int = 123
@@ -67,10 +61,7 @@ open class Client {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func testAPI2() async throws -> Void {
         var _runtime: [String: Any] = [
-            "undefined": ,
             "retry": true,
-            "undefined": ,
-            "undefined": 
         ]
         var _lastRequest: Tea.TeaRequest? = nil
         var _lastException: Tea.TeaError? = nil
@@ -87,7 +78,6 @@ open class Client {
             do {
                 var _request: Tea.TeaRequest = Tea.TeaRequest()
                 var modelInstance: Test3 = Test3([
-                    "undefined": 
                 ])
                 var bool: Bool = true
                 if (bool) {
