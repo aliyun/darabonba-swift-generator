@@ -50,7 +50,7 @@ public class M : Tea.TeaModel {
     }
 
     public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("subM") {
+        if dict.keys.contains("subM") && dict["subM"] != nil {
             var model = M.SubM()
             model.fromMap(dict["subM"] as! [String: Any])
             self.subM = model
@@ -107,7 +107,7 @@ public class MyModel : Tea.TeaModel {
         }
 
         public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("stringfield") {
+            if dict.keys.contains("stringfield") && dict["stringfield"] != nil {
                 self.stringfield = dict["stringfield"] as! String
             }
         }
@@ -438,163 +438,189 @@ public class MyModel : Tea.TeaModel {
     }
 
     public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("stringfield") {
+        if dict.keys.contains("stringfield") && dict["stringfield"] != nil {
             self.stringfield = dict["stringfield"] as! String
         }
-        if dict.keys.contains("bytesfield") {
+        if dict.keys.contains("bytesfield") && dict["bytesfield"] != nil {
             self.bytesfield = dict["bytesfield"] as! [UInt8]
         }
-        if dict.keys.contains("stringarrayfield") {
+        if dict.keys.contains("stringarrayfield") && dict["stringarrayfield"] != nil {
             self.stringarrayfield = dict["stringarrayfield"] as! [String]
         }
-        if dict.keys.contains("mapfield") {
+        if dict.keys.contains("mapfield") && dict["mapfield"] != nil {
             self.mapfield = dict["mapfield"] as! [String: String]
         }
-        if dict.keys.contains("realName") {
+        if dict.keys.contains("realName") && dict["realName"] != nil {
             self.name = dict["realName"] as! String
         }
-        if dict.keys.contains("submodel") {
+        if dict.keys.contains("submodel") && dict["submodel"] != nil {
             var model = MyModel.Submodel()
             model.fromMap(dict["submodel"] as! [String: Any])
             self.submodel = model
         }
-        if dict.keys.contains("submodelMap") {
+        if dict.keys.contains("submodelMap") && dict["submodelMap"] != nil {
             var tmp : [String: MyModel.Submodel] = [:]
-            for (k, v) in dict["submodelMap"] as! [String: MyModel.Submodel] {
-                var model = MyModel.Submodel()
-                model.fromMap(v as! [String: Any])
-                tmp[k] = model
+            for (k, v) in dict["submodelMap"] as! [String: Any] {
+                if v != nil {
+                    var model = MyModel.Submodel()
+                    model.fromMap(v as! [String: Any])
+                    tmp[k] = model
+                }
             }
             self.submodelMap = tmp
         }
-        if dict.keys.contains("mapModel") {
+        if dict.keys.contains("mapModel") && dict["mapModel"] != nil {
             var tmp : [String: M] = [:]
-            for (k, v) in dict["mapModel"] as! [String: M] {
-                var model = M()
-                model.fromMap(v as! [String: Any])
-                tmp[k] = model
+            for (k, v) in dict["mapModel"] as! [String: Any] {
+                if v != nil {
+                    var model = M()
+                    model.fromMap(v as! [String: Any])
+                    tmp[k] = model
+                }
             }
             self.mapModel = tmp
         }
-        if dict.keys.contains("subarraymodel") {
-            self.subarraymodel = dict["subarraymodel"] as! [MyModel.Subarraymodel]
+        if dict.keys.contains("subarraymodel") && dict["subarraymodel"] != nil {
+            var tmp : [MyModel.Subarraymodel] = []
+            for v in dict["subarraymodel"] as! [Any] {
+                var model = MyModel.Subarraymodel()
+                if v != nil {
+                    model.fromMap(v as! [String: Any])
+                }
+                tmp.append(model)
+            }
+            self.subarraymodel = tmp
         }
-        if dict.keys.contains("subarray") {
-            self.subarray = dict["subarray"] as! [M]
+        if dict.keys.contains("subarray") && dict["subarray"] != nil {
+            var tmp : [M] = []
+            for v in dict["subarray"] as! [Any] {
+                var model = M()
+                if v != nil {
+                    model.fromMap(v as! [String: Any])
+                }
+                tmp.append(model)
+            }
+            self.subarray = tmp
         }
-        if dict.keys.contains("maparray") {
+        if dict.keys.contains("maparray") && dict["maparray"] != nil {
             self.maparray = dict["maparray"] as! [[String: Any]]
         }
-        if dict.keys.contains("moduleModelMap") {
+        if dict.keys.contains("moduleModelMap") && dict["moduleModelMap"] != nil {
             var tmp : [String: DarabonbaImport.Request] = [:]
-            for (k, v) in dict["moduleModelMap"] as! [String: DarabonbaImport.Request] {
-                var model = DarabonbaImport.Request()
-                model.fromMap(v as! [String: Any])
-                tmp[k] = model
+            for (k, v) in dict["moduleModelMap"] as! [String: Any] {
+                if v != nil {
+                    var model = DarabonbaImport.Request()
+                    model.fromMap(v as! [String: Any])
+                    tmp[k] = model
+                }
             }
             self.moduleModelMap = tmp
         }
-        if dict.keys.contains("subModelMap") {
+        if dict.keys.contains("subModelMap") && dict["subModelMap"] != nil {
             var tmp : [String: M.SubM] = [:]
-            for (k, v) in dict["subModelMap"] as! [String: M.SubM] {
-                var model = M.SubM()
-                model.fromMap(v as! [String: Any])
-                tmp[k] = model
+            for (k, v) in dict["subModelMap"] as! [String: Any] {
+                if v != nil {
+                    var model = M.SubM()
+                    model.fromMap(v as! [String: Any])
+                    tmp[k] = model
+                }
             }
             self.subModelMap = tmp
         }
-        if dict.keys.contains("modelMap") {
+        if dict.keys.contains("modelMap") && dict["modelMap"] != nil {
             var tmp : [String: M] = [:]
-            for (k, v) in dict["modelMap"] as! [String: M] {
-                var model = M()
-                model.fromMap(v as! [String: Any])
-                tmp[k] = model
+            for (k, v) in dict["modelMap"] as! [String: Any] {
+                if v != nil {
+                    var model = M()
+                    model.fromMap(v as! [String: Any])
+                    tmp[k] = model
+                }
             }
             self.modelMap = tmp
         }
-        if dict.keys.contains("moduleMap") {
+        if dict.keys.contains("moduleMap") && dict["moduleMap"] != nil {
             self.moduleMap = dict["moduleMap"] as! [String: DarabonbaImport.Client]
         }
-        if dict.keys.contains("object") {
+        if dict.keys.contains("object") && dict["object"] != nil {
             self.object = dict["object"] as! [String: Any]
         }
-        if dict.keys.contains("readable") {
+        if dict.keys.contains("readable") && dict["readable"] != nil {
             self.readable = dict["readable"] as! InputStream
         }
-        if dict.keys.contains("writable") {
+        if dict.keys.contains("writable") && dict["writable"] != nil {
             self.writable = dict["writable"] as! OutputStream
         }
-        if dict.keys.contains("existModel") {
+        if dict.keys.contains("existModel") && dict["existModel"] != nil {
             var model = M()
             model.fromMap(dict["existModel"] as! [String: Any])
             self.existModel = model
         }
-        if dict.keys.contains("request") {
+        if dict.keys.contains("request") && dict["request"] != nil {
             var model = Tea.TeaRequest()
             model.fromMap(dict["request"] as! [String: Any])
             self.request = model
         }
-        if dict.keys.contains("complexList") {
+        if dict.keys.contains("complexList") && dict["complexList"] != nil {
             self.complexList = dict["complexList"] as! [[String]]
         }
-        if dict.keys.contains("numberfield") {
+        if dict.keys.contains("numberfield") && dict["numberfield"] != nil {
             self.numberfield = dict["numberfield"] as! Int
         }
-        if dict.keys.contains("integerField") {
+        if dict.keys.contains("integerField") && dict["integerField"] != nil {
             self.integerField = dict["integerField"] as! Int
         }
-        if dict.keys.contains("floatField") {
+        if dict.keys.contains("floatField") && dict["floatField"] != nil {
             self.floatField = dict["floatField"] as! Double
         }
-        if dict.keys.contains("doubleField") {
+        if dict.keys.contains("doubleField") && dict["doubleField"] != nil {
             self.doubleField = dict["doubleField"] as! Double
         }
-        if dict.keys.contains("longField") {
+        if dict.keys.contains("longField") && dict["longField"] != nil {
             self.longField = dict["longField"] as! Int64
         }
-        if dict.keys.contains("ulongField") {
+        if dict.keys.contains("ulongField") && dict["ulongField"] != nil {
             self.ulongField = dict["ulongField"] as! Int64
         }
-        if dict.keys.contains("int8Field") {
+        if dict.keys.contains("int8Field") && dict["int8Field"] != nil {
             self.int8Field = dict["int8Field"] as! Int32
         }
-        if dict.keys.contains("int16Field") {
+        if dict.keys.contains("int16Field") && dict["int16Field"] != nil {
             self.int16Field = dict["int16Field"] as! Int32
         }
-        if dict.keys.contains("int32Field") {
+        if dict.keys.contains("int32Field") && dict["int32Field"] != nil {
             self.int32Field = dict["int32Field"] as! Int32
         }
-        if dict.keys.contains("int64Field") {
+        if dict.keys.contains("int64Field") && dict["int64Field"] != nil {
             self.int64Field = dict["int64Field"] as! Int64
         }
-        if dict.keys.contains("uint8Field") {
+        if dict.keys.contains("uint8Field") && dict["uint8Field"] != nil {
             self.uint8Field = dict["uint8Field"] as! Int32
         }
-        if dict.keys.contains("uint16Field") {
+        if dict.keys.contains("uint16Field") && dict["uint16Field"] != nil {
             self.uint16Field = dict["uint16Field"] as! Int32
         }
-        if dict.keys.contains("uint32Field") {
+        if dict.keys.contains("uint32Field") && dict["uint32Field"] != nil {
             self.uint32Field = dict["uint32Field"] as! Int32
         }
-        if dict.keys.contains("uint64Field") {
+        if dict.keys.contains("uint64Field") && dict["uint64Field"] != nil {
             self.uint64Field = dict["uint64Field"] as! Int64
         }
-        if dict.keys.contains("link") {
+        if dict.keys.contains("link") && dict["link"] != nil {
             self.link = dict["link"] as! String
         }
-        if dict.keys.contains("class_end_time") {
+        if dict.keys.contains("class_end_time") && dict["class_end_time"] != nil {
             self.classEndTime = dict["class_end_time"] as! String
         }
-        if dict.keys.contains("max-length") {
+        if dict.keys.contains("max-length") && dict["max-length"] != nil {
             self.maxLength = dict["max-length"] as! String
         }
-        if dict.keys.contains("min-length") {
+        if dict.keys.contains("min-length") && dict["min-length"] != nil {
             self.minLength = dict["min-length"] as! String
         }
-        if dict.keys.contains("maximum") {
+        if dict.keys.contains("maximum") && dict["maximum"] != nil {
             self.maximum = dict["maximum"] as! Int64
         }
-        if dict.keys.contains("minimum") {
+        if dict.keys.contains("minimum") && dict["minimum"] != nil {
             self.minimum = dict["minimum"] as! Int64
         }
     }
