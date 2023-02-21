@@ -26,7 +26,7 @@ public class Test : Tea.TeaModel {
     }
 
     public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("test") {
+        if dict.keys.contains("test") && dict["test"] != nil {
             self.test = dict["test"] as! String
         }
     }

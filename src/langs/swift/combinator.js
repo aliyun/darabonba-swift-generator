@@ -1048,14 +1048,14 @@ class Combinator extends CombinatorBase {
     if (is.array(type)) {
       if (depth > 0) {
         const propInfo = {
-          name: `k${depth}`,
+          name: `v${depth}`,
           fieldName: fieldName,
           type: type.itemType,
           parentType: type
         };
 
         emitter.emitln(`var l${depth} : [${this.emitType(type.itemType)}] = []`, this.level);
-        emitter.emitln(`for k${depth} in ${name} as! [${this.emitType(type.itemType)}] {`, this.level);
+        emitter.emitln(`for v${depth} in ${name} as! [Any] {`, this.level);
         this.levelUp();
         this.emitComplexFromMap(emitter, propInfo, `l${depth}`, depth + 1);
         this.levelDown();
@@ -1067,23 +1067,27 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = l${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${fieldName}") && dict["${fieldName}"] != nil {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [${this.emitType(type.itemType)}] = []`, this.level);
-        emitter.emitln(`for k in dict["${fieldName}"] as! [${this.emitType(type.itemType)}] {`, this.level);
+        emitter.emitln(`for v in dict["${fieldName}"] as! [Any] {`, this.level);
         this.levelUp();
         if (is.array(type.itemType) || is.map(type.itemType)) {
           const propInfo = {
-            name: 'k',
+            name: 'v',
             fieldName: fieldName,
             type: type.itemType,
             parentType: type
           };
           this.emitComplexFromMap(emitter, propInfo, 'tmp', depth + 1);
         } else {
-          if (type.itemType.objectType === 'model') {
+          if ((is.object(type.itemType) && type.itemType.objectName && type.itemType.objectName.indexOf('#') === 0) || type.itemType.objectType === 'model') {
             emitter.emitln(`var model = ${this.emitType(type.itemType)}()`, this.level);
+            emitter.emitln('if v != nil {', this.level);
+            this.levelUp();
             emitter.emitln('model.fromMap(v as! [String: Any])', this.level);
+            this.levelDown();
+            emitter.emitln('}', this.level);
             emitter.emitln('tmp.append(model)', this.level);
             emitter.needSave = true;
           } else {
@@ -1092,7 +1096,7 @@ class Combinator extends CombinatorBase {
         }
         this.levelDown();
         emitter.emitln('}', this.level);
-        emitter.emitln(`self.${_name(name)} = []`, this.level);
+        emitter.emitln(`self.${_name(name)} = tmp`, this.level);
         this.levelDown();
         emitter.emitln('}', this.level);
       }
@@ -1118,10 +1122,10 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = d${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${fieldName}") && dict["${fieldName}"] != nil {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [String: ${this.emitType(type.valType)}] = [:]`, this.level);
-        emitter.emitln(`for (k, v) in dict["${fieldName}"] as! [String: ${this.emitType(type.valType)}] {`, this.level);
+        emitter.emitln(`for (k, v) in dict["${fieldName}"] as! [String: Any] {`, this.level);
         this.levelUp();
         if (is.array(type.valType) || is.map(type.valType)) {
           const propInfo = {
@@ -1133,9 +1137,13 @@ class Combinator extends CombinatorBase {
           this.emitComplexFromMap(emitter, propInfo, 'tmp', depth + 1);
         } else {
           if (is.object(type.valType) && type.valType.objectName && type.valType.objectName.indexOf('#') === 0) {
+            emitter.emitln('if v != nil {', this.level);
+            this.levelUp();
             emitter.emitln(`var model = ${this.emitType(type.valType)}()`, this.level);
             emitter.emitln('model.fromMap(v as! [String: Any])', this.level);
             emitter.emitln('tmp[k] = model', this.level);
+            this.levelDown();
+            emitter.emitln('}', this.level);
             emitter.needSave = true;
           } else {
             emitter.needSave = false;
@@ -1151,12 +1159,20 @@ class Combinator extends CombinatorBase {
       const num = depth - 1 > 0 ? depth - 1 : '';
       if (is.array(parentType)) {
         emitter.emitln(`var model = ${this.emitType(type)}()`, this.level);
+        emitter.emitln(`if ${name} != nil {`, this.level);
+        this.levelUp();
         emitter.emitln(`model.fromMap(${name} as! [String: Any])`, this.level);
+        this.levelDown();
+        emitter.emitln('}', this.level);
         emitter.emitln(`l${num}.append(model)`, this.level);
       } else if (is.map(parentType)) {
+        emitter.emitln(`if ${name} != nil {`, this.level);
+        this.levelUp();
         emitter.emitln(`var model = ${this.emitType(type)}()`, this.level);
         emitter.emitln(`model.fromMap(${name} as! [String: Any])`, this.level);
         emitter.emitln(`d${num}[k${num}] = model`, this.level);
+        this.levelDown();
+        emitter.emitln('}', this.level);
       }
       emitter.needSave = true;
     }
@@ -1181,14 +1197,14 @@ class Combinator extends CombinatorBase {
         if (emt.needSave === true) {
           emitter.emit(emt.output);
         } else {
-          emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
+          emitter.emitln(`if dict.keys.contains("${name}") && dict["${name}"] != nil {`, this.level);
           this.levelUp();
           emitter.emitln(`self.${_name(prop.name)} = dict["${name}"] as! ${this.emitType(prop.type)}`, this.level);
           this.levelDown();
           emitter.emitln('}', this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${name}") && dict["${name}"] != nil {`, this.level);
         this.levelUp();
         if (is.object(prop.type) && prop.type.objectName && prop.type.objectName.indexOf('#') === 0) {
           emitter.emitln(`var model = ${this.emitType(prop.type)}()`, this.level);
