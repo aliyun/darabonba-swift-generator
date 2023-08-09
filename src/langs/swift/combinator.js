@@ -79,9 +79,9 @@ class Combinator extends CombinatorBase {
       full_name = this.coreClass(name);
     } else if (access.length > 1 && this.dependencies[access[0]]) {
       const item = this.dependencies[access[0]];
-      full_name = `${_upperFirst(_camelCase(item.package_name))}.${_name(access.slice(1).join('.'))}`;
+      full_name = `${_upperFirst(_camelCase(item.package_name))}.${_name(access.slice(1).map(s => _avoidKeywords(s)).join('.'))}`;
     } else {
-      full_name = name;
+      full_name = name.split('.').map(s => _avoidKeywords(s)).join('.');
     }
     full_name = full_name.split('.').map(s => _upperFirst(s)).join('.');
     this.classMap[name] = full_name;

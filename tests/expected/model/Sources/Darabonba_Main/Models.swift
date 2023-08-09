@@ -2,6 +2,73 @@ import Foundation
 import Tea
 import DarabonbaImport
 
+public class Protocol_ : Tea.TeaModel {
+    public class Test : Tea.TeaModel {
+        public var m: M?
+
+        public override init() {
+            super.init()
+        }
+
+        public init(_ dict: [String: Any]) {
+            super.init()
+            self.fromMap(dict)
+        }
+
+        public override func validate() throws -> Void {
+            try self.validateRequired(self.m, "m")
+            try self.m?.validate()
+        }
+
+        public override func toMap() -> [String : Any] {
+            var map = super.toMap()
+            if self.m != nil {
+                map["m"] = self.m?.toMap()
+            }
+            return map
+        }
+
+        public override func fromMap(_ dict: [String: Any]) -> Void {
+            if dict.keys.contains("m") && dict["m"] != nil {
+                var model = M()
+                model.fromMap(dict["m"] as! [String: Any])
+                self.m = model
+            }
+        }
+    }
+    public var Test: Protocol_.Test?
+
+    public override init() {
+        super.init()
+    }
+
+    public init(_ dict: [String: Any]) {
+        super.init()
+        self.fromMap(dict)
+    }
+
+    public override func validate() throws -> Void {
+        try self.validateRequired(self.Test, "Test")
+        try self.Test?.validate()
+    }
+
+    public override func toMap() -> [String : Any] {
+        var map = super.toMap()
+        if self.Test != nil {
+            map["Test"] = self.Test?.toMap()
+        }
+        return map
+    }
+
+    public override func fromMap(_ dict: [String: Any]) -> Void {
+        if dict.keys.contains("Test") && dict["Test"] != nil {
+            var model = Protocol_.Test()
+            model.fromMap(dict["Test"] as! [String: Any])
+            self.Test = model
+        }
+    }
+}
+
 public class M : Tea.TeaModel {
     public class SubM : Tea.TeaModel {
 
@@ -216,6 +283,8 @@ public class MyModel : Tea.TeaModel {
 
     public var minimum: Int64?
 
+    public var keyword: Protocol_.Test?
+
     public override init() {
         super.init()
     }
@@ -279,6 +348,7 @@ public class MyModel : Tea.TeaModel {
         if self.minimum != nil {
             try self.validateMinimum(self.minimum as! NSNumber, "minimum", 0)
         }
+        try self.keyword?.validate()
     }
 
     public override func toMap() -> [String : Any] {
@@ -433,6 +503,9 @@ public class MyModel : Tea.TeaModel {
         }
         if self.minimum != nil {
             map["minimum"] = self.minimum!
+        }
+        if self.keyword != nil {
+            map["keyword"] = self.keyword?.toMap()
         }
         return map
     }
@@ -622,6 +695,11 @@ public class MyModel : Tea.TeaModel {
         }
         if dict.keys.contains("minimum") && dict["minimum"] != nil {
             self.minimum = dict["minimum"] as! Int64
+        }
+        if dict.keys.contains("keyword") && dict["keyword"] != nil {
+            var model = Protocol_.Test()
+            model.fromMap(dict["keyword"] as! [String: Any])
+            self.keyword = model
         }
     }
 }
