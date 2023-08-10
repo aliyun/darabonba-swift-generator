@@ -419,9 +419,9 @@ public class ComplexRequest : Tea.TeaModel {
             var tmp : [Any] = []
             for k in self.complexList! {
                 var l1 : [Any] = []
-                for k1 in k! {
+                for k1 in k {
                     var l2 : [Any] = []
-                    for k2 in k1! {
+                    for k2 in k1 {
                         l2.append(k2.toMap())
                     }
                     l1.append(l2)

@@ -36,6 +36,7 @@ model MyModel = {
   existModel: M,
   request: $Request,
   complexList: [ [ string ] ],
+  modelComplexList: [ [ M ] ],
   numberfield: number,
   integerField: integer,
   floatField: float,

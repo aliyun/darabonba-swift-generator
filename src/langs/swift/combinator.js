@@ -890,7 +890,7 @@ class Combinator extends CombinatorBase {
     if (is.array(type)) {
       if (depth > 0) {
         emitter.emitln(`var l${depth} : [Any] = []`, this.level);
-        emitter.emitln(`for k${depth} in ${name}! {`, this.level);
+        emitter.emitln(`for k${depth} in ${name} {`, this.level);
         this.levelUp();
         const propInfo = {
           name: `k${depth}`,
