@@ -243,6 +243,8 @@ public class MyModel : Tea.TeaModel {
 
     public var complexList: [[String]]?
 
+    public var modelComplexList: [[M]]?
+
     public var numberfield: Int?
 
     public var integerField: Int?
@@ -319,6 +321,7 @@ public class MyModel : Tea.TeaModel {
         try self.validateRequired(self.request, "request")
         try self.request?.validate()
         try self.validateRequired(self.complexList, "complexList")
+        try self.validateRequired(self.modelComplexList, "modelComplexList")
         try self.validateRequired(self.numberfield, "numberfield")
         try self.validateRequired(self.integerField, "integerField")
         try self.validateRequired(self.floatField, "floatField")
@@ -443,6 +446,17 @@ public class MyModel : Tea.TeaModel {
         }
         if self.complexList != nil {
             map["complexList"] = self.complexList!
+        }
+        if self.modelComplexList != nil {
+            var tmp : [Any] = []
+            for k in self.modelComplexList! {
+                var l1 : [Any] = []
+                for k1 in k {
+                    l1.append(k1.toMap())
+                }
+                tmp.append(l1)
+            }
+            map["modelComplexList"] = tmp
         }
         if self.numberfield != nil {
             map["numberfield"] = self.numberfield!
@@ -635,6 +649,21 @@ public class MyModel : Tea.TeaModel {
         }
         if dict.keys.contains("complexList") && dict["complexList"] != nil {
             self.complexList = dict["complexList"] as! [[String]]
+        }
+        if dict.keys.contains("modelComplexList") && dict["modelComplexList"] != nil {
+            var tmp : [[M]] = []
+            for v in dict["modelComplexList"] as! [Any] {
+                var l1 : [M] = []
+                for v1 in v as! [Any] {
+                    var model = M()
+                    if v1 != nil {
+                        model.fromMap(v1 as! [String: Any])
+                    }
+                    l1.append(model)
+                }
+                tmp.append(l1)
+            }
+            self.modelComplexList = tmp
         }
         if dict.keys.contains("numberfield") && dict["numberfield"] != nil {
             self.numberfield = dict["numberfield"] as! Int
