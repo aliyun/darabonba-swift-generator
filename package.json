@@ -1,6 +1,6 @@
 {
   "name": "@darabonba/swift-generator",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "The SDK generator for Swift",
   "main": "src/generator",
   "directories": {
