@@ -1,19 +1,14 @@
 English | [简体中文](/README-zh-CN.md)
 
-[![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
+[![Node.js CI](https://github.com/aliyun/darabonba-swift-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/aliyun/darabonba-swift-generator/actions/workflows/ci.yml)
 [![codecov][cov-image]][cov-url]
-[![David deps][david-image]][david-url]
+[![NPM version][npm-image]][npm-url]
 [![npm download][download-image]][download-url]
 
 [npm-image]: https://img.shields.io/npm/v/@darabonba/swift-generator.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/@darabonba/swift-generator
-[travis-image]: https://img.shields.io/travis/aliyun/darabonba-swift-generator.svg?style=flat-square
-[travis-url]: https://travis-ci.org/aliyun/darabonba-swift-generator
 [cov-image]: https://codecov.io/gh/aliyun/darabonba-swift-generator/branch/master/graph/badge.svg
 [cov-url]: https://codecov.io/gh/aliyun/darabonba-swift-generator
-[david-image]: https://img.shields.io/david/aliyun/darabonba-swift-generator.svg?style=flat-square
-[david-url]: https://david-dm.org/aliyun/darabonba-swift-generator
 [download-image]: https://img.shields.io/npm/dm/@darabonba/swift-generator.svg?style=flat-square
 [download-url]: https://npmjs.org/package/@darabonba/swift-generator
 
