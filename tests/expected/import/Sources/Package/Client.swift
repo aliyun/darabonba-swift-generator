@@ -19,6 +19,12 @@ open class Client {
         ])
     }
 
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func testClient() async throws -> Void {
+        var tmp: Import.Client? = nil
+        tmp = try Import.Client()
+    }
+
     public static func Sample(_ client: Import.Client?) -> Void {
         var runtime: Import.RuntimeObject = Import.RuntimeObject([:])
         var request: Import.Request = Import.Request([

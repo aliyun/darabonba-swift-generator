@@ -279,6 +279,7 @@ class Combinator extends CombinatorBase {
   }
 
   emitConstruct(emitter, node, hasExtends) {
+    // New Client need try
     emitter.emitln(`public${hasExtends ? ' override ' : ' '}init(${this.resolveFuncParams(node.params)}) throws {`, this.level);
     this.levelUp();
     node.body.forEach(element => {
@@ -783,6 +784,9 @@ class Combinator extends CombinatorBase {
   grammerNewObject(emitter, gram) {
     let objectName = '';
     objectName = gram.name;
+    if (objectName.indexOf('^') === 0) { // New Client
+      emitter.emit('try ');
+    }
     emitter.emit(`${this.resolveName(objectName)}(`);
     if (!Array.isArray(gram.params)) {
       this.grammerValue(emitter, gram.params);
@@ -869,6 +873,9 @@ class Combinator extends CombinatorBase {
       let emit = new Emitter(this.config);
       if (item.dataType instanceof TypeString) {
         this.grammer(emit, item, false, false);
+        if (item.type !== 'string') {
+          emit.output = `(${emit.output})`;
+        }
       } else {
         emit.emit('String(');
         this.grammer(emit, item, false, false);
@@ -1067,7 +1074,7 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = l${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") && dict["${fieldName}"] != nil {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [${this.emitType(type.itemType)}] = []`, this.level);
         emitter.emitln(`for v in dict["${fieldName}"] as! [Any] {`, this.level);
@@ -1122,7 +1129,7 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = d${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") && dict["${fieldName}"] != nil {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [String: ${this.emitType(type.valType)}] = [:]`, this.level);
         emitter.emitln(`for (k, v) in dict["${fieldName}"] as! [String: Any] {`, this.level);
@@ -1197,14 +1204,14 @@ class Combinator extends CombinatorBase {
         if (emt.needSave === true) {
           emitter.emit(emt.output);
         } else {
-          emitter.emitln(`if dict.keys.contains("${name}") && dict["${name}"] != nil {`, this.level);
+          emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
           this.levelUp();
           emitter.emitln(`self.${_name(prop.name)} = dict["${name}"] as! ${this.emitType(prop.type)}`, this.level);
           this.levelDown();
           emitter.emitln('}', this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${name}") && dict["${name}"] != nil {`, this.level);
+        emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
         this.levelUp();
         if (is.object(prop.type) && prop.type.objectName && prop.type.objectName.indexOf('#') === 0) {
           emitter.emitln(`var model = ${this.emitType(prop.type)}()`, this.level);

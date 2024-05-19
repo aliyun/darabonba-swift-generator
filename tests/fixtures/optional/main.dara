@@ -1,0 +1,32 @@
+init(){
+}
+
+model Request = {
+  a?: map[string]string,
+  b?: string,
+  c?: integer,
+}
+
+model Response = {
+  header?: map[string]string,
+  body?: {
+    name?: string,
+    len?: int64,
+  },
+}
+
+function isSet(a: any) : boolean {
+  return true;
+}
+
+async function test() : void {
+  var res : Response = new Response{};
+  var test : string = `test1${res.body.name}${res.body.len}`;
+  var req : Request = new Request{};
+  req.b = res.body.name;
+  req.b = `test2${res.body.name}${res.body.len}`;
+  var a = res.body.name;
+  if (isSet(res.body)) {
+    var b = res.body.name;
+  }
+}

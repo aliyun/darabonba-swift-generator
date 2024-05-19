@@ -43,7 +43,7 @@ open class Client : DarabonbaImport.Client {
                 var moduleMapVal: [String: DarabonbaImport.Client] = [:]
                 var modelMapVal: [String: ComplexRequest] = [:]
                 var subModelMapVal: [String: ComplexRequest.Header] = [:]
-                var version: String = "/" + "2019-01-08" + self._pathname
+                var version: String = "/" + "2019-01-08" + (self._pathname ?? "")
                 var mapAccess: String = _API[version as! String] ?? ""
                 var reqMap: [String: ComplexRequest]? = nil
                 var mapString: [String: String] = [
@@ -103,7 +103,7 @@ open class Client : DarabonbaImport.Client {
                 _request.protocol_ = self._protocol ?? ""
                 _request.port = 80
                 _request.method = "GET"
-                _request.pathname = "/" + self._pathname
+                _request.pathname = "/" + (self._pathname ?? "")
                 _request.query = DarabonbaImport.Client.query(Tea.TeaConverter.merge([
                     "date": "2019",
                     "access": mapAccess as! String,
@@ -149,7 +149,7 @@ open class Client : DarabonbaImport.Client {
         var _request: Tea.TeaRequest = Tea.TeaRequest()
         var name: String = "complex"
         var config: DarabonbaImport.Config = DarabonbaImport.Config([:])
-        var client: DarabonbaImport.Client = DarabonbaImport.Client(config)
+        var client: DarabonbaImport.Client = try DarabonbaImport.Client(config)
         _request.protocol_ = "HTTP"
         _request.port = 80
         _request.method = "GET"
@@ -355,7 +355,7 @@ open class Client : DarabonbaImport.Client {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func TemplateString() async throws -> String {
-        return "/\n" + self._protocol
+        return "/\n" + (self._protocol ?? "")
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -401,7 +401,7 @@ open class Client : DarabonbaImport.Client {
     }
 
     public func throwsFunc() throws -> String {
-        return "/" + self._protocol
+        return "/" + (self._protocol ?? "")
     }
 
     public func throwsFunc1() throws -> String {
