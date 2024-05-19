@@ -150,4 +150,11 @@ describe('Swift Generator', function () {
       'Client.swift',
     ]);
   });
+
+  it('optional should ok', function () {
+    check('optional', [
+      'Sources/Darabonba_Main/Client.swift',
+      'Sources/Darabonba_Main/Models.swift'
+    ]);
+  });
 });

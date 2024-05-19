@@ -33,10 +33,10 @@ public class A : Tea.TeaModel {
     }
 
     public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("m") && dict["m"] != nil {
+        if dict.keys.contains("m") {
             self.m = dict["m"] as! [String: String]
         }
-        if dict.keys.contains("str") && dict["str"] != nil {
+        if dict.keys.contains("str") {
             self.str = dict["str"] as! String
         }
     }
@@ -71,7 +71,7 @@ public class B : Tea.TeaModel {
     }
 
     public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("mm") && dict["mm"] != nil {
+        if dict.keys.contains("mm") {
             var tmp : [A] = []
             for v in dict["mm"] as! [Any] {
                 var model = A()

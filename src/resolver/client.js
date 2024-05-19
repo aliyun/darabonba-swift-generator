@@ -558,10 +558,10 @@ class ClientResolver extends BaseResolver {
           debug.stack(last_path_type);
         }
         var resolve = false;
-        if (i !== (object.propertyPath.length - 1)) {
+        if (i !== (object.propertyPath.length - 1) && object.id.lexeme !== '__request' && object.id.lexeme !== '__response') {
           resolve = true;
         }
-        call.addPath({ type: call_type, name: path_name, dataType: path_type, needCast: model && resolve });
+        call.addPath({ type: call_type, name: path_name, dataType: path_type, needCast: resolve });
         last_path_type = path_type;
       });
 
@@ -590,7 +590,7 @@ class ClientResolver extends BaseResolver {
       let behaviorTamplateString = new BehaviorTamplateString();
       object.elements.forEach(ele => {
         if (ele.type !== 'element') {
-          behaviorTamplateString.addItem(this.renderGrammerValue(null, ele.expr));
+          behaviorTamplateString.addItem(this.renderGrammerValue(null, ele.expr, null, true));
         } else {
           behaviorTamplateString.addItem(new GrammerValue('string', ele.value.string, new TypeString()));
         }
@@ -717,7 +717,7 @@ class ClientResolver extends BaseResolver {
       valGrammer.expected = expectedType ? this.resolveTypeItem(expectedType) : null;
     } else if (object.type === 'property') {
       object.type = 'property_access';
-      this.renderGrammerValue(valGrammer, object);
+      this.renderGrammerValue(valGrammer, object, null, canCast);
     } else if (object.type === 'super') {
       valGrammer.type = 'call';
       let call = new GrammerCall('super', undefined, undefined, undefined, object.hasThrow, object.isAsync);
@@ -833,9 +833,7 @@ class ClientResolver extends BaseResolver {
       node = this.renderGrammerValue(null, stmt);
     } else if (stmt.type === 'declare') {
       let type = null;
-      if (stmt.expectedType) {
-        type = this.resolveTypeItem(stmt.expectedType);
-      } else if (stmt.expr.inferred) {
+      if (stmt.expr && stmt.expr.inferred) {
         let inferred = stmt.expr.inferred;
         if (stmt.expr.propertyPathTypes && stmt.expr.propertyPathTypes.length) {
           if (stmt.expr.propertyPathTypes[stmt.expr.propertyPathTypes.length - 1].type === 'map') {
@@ -843,6 +841,8 @@ class ClientResolver extends BaseResolver {
           }
         }
         type = this.resolveTypeItem(inferred);
+      } else if (stmt.expectedType) {
+        type = this.resolveTypeItem(stmt.expectedType);
       } else {
         debug.stack(stmt);
       }

@@ -14,6 +14,11 @@ init(id: [ string ], str: string) {
     };
 }
 
+async function testClient(): void {
+  var tmp : Source = null;
+  tmp = new Source();
+}
+
 static function Sample(client: Source): void {
     var runtime = new Source.RuntimeObject{};
     var request = new Source.Request{
