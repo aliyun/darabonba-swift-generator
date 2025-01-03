@@ -10,7 +10,9 @@ open class Client {
         var m: [String: String] = [:]
         return Tea.TeaConverter.merge([
             "key": "value",
-            "key-1": "value-1"
+            "key-1": "value-1",
+            "key-2": "value-2",
+            "\"\"": "value-3"
         ], m)
     }
 

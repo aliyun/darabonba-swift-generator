@@ -51,7 +51,7 @@ const {
 } = require('../langs/common/enum');
 
 const {
-  _isBasicType, is
+  _isBasicType, is, _string
 } = require('../lib/helper');
 const assert = require('assert');
 
@@ -522,8 +522,8 @@ class ClientResolver extends BaseResolver {
         if (field.type === 'expandField') {
           exprChild.isExpand = true;
         }
-        if (field.fieldName && field.fieldName.lexeme) {
-          exprChild.key = field.fieldName.lexeme;
+        if (field.fieldName && (field.fieldName.lexeme || field.fieldName.string)) {
+          exprChild.key = field.fieldName.lexeme || _string(field.fieldName);
         }
         this.renderGrammerValue(exprChild, field.expr, expectedType, true);
         this.findComments(valGrammer, field);
