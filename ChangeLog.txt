@@ -1,3 +1,6 @@
+2025-01-13 Version: 1.0.9
+1. Adjust field name for object.
+
 2024-05-21 Version: 1.0.8
 1. Resolve declare and template_string statements.
 
