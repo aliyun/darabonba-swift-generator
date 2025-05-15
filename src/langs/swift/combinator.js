@@ -716,21 +716,10 @@ class Combinator extends CombinatorBase {
 
   grammerCatch(emitter, gram) {
     if (gram.exceptions.type) {
-      emitter.emitln('catch {', this.level);
+      emitter.emitln(`catch let ${gram.exceptions.exceptionVar.name} as ${this.emitType(gram.exceptions.type)} {`, this.level);
       this.levelUp();
-      emitter.emitln(`if error is ${this.emitType(gram.exceptions.type)} {`, this.level);
-      this.levelUp();
-      if (gram.exceptions.exceptionVar.name !== 'error') {
-        emitter.emitln(`var ${gram.exceptions.exceptionVar.name} = error as! ${this.emitType(gram.exceptions.type)}`, this.level);
-      }
       this.addStatement(gram.exceptions.exceptionVar.name, gram.exceptions.exceptionVar.type);
       gram.body.forEach(node => this.grammer(emitter, node));
-      this.levelDown();
-      emitter.emitln('} else {', this.level);
-      this.levelUp();
-      emitter.emitln('throw error', this.level);
-      this.levelDown();
-      emitter.emitln('}', this.level);
       this.levelDown();
       emitter.emitln('}', this.level);
     } else {

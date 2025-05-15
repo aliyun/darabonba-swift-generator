@@ -369,13 +369,8 @@ open class Client : DarabonbaImport.Client {
         do {
             var str: String = try await TemplateString()
         }
-        catch {
-            if error is Tea.TeaError {
-                var err = error as! Tea.TeaError
-                var error: Tea.ReuqestError = err as! Tea.ReuqestError
-            } else {
-                throw error
-            }
+        catch let err as Tea.TeaError {
+            var error: Tea.ReuqestError = err as! Tea.ReuqestError
         }
         defer {
             var final_: String = "ok"
@@ -383,13 +378,8 @@ open class Client : DarabonbaImport.Client {
         do {
             var strNoFinal: String = try await TemplateString()
         }
-        catch {
-            if error is Tea.TeaError {
-                var e = error as! Tea.TeaError
-                var errorNoFinal: Tea.ReuqestError = e as! Tea.ReuqestError
-            } else {
-                throw error
-            }
+        catch let e as Tea.TeaError {
+            var errorNoFinal: Tea.ReuqestError = e as! Tea.ReuqestError
         }
         do {
             var strNoCatch: String = try await TemplateString()
