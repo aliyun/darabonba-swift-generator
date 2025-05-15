@@ -1,3 +1,7 @@
+2025-05-15 Version: 1.1.0
+1. Resolve method fromMap when value is nil.
+2. Resolve try-catch.
+
 2025-01-13 Version: 1.0.9
 1. Adjust field name for object.
 

@@ -77,7 +77,7 @@ class PackageInfo extends BasePackageInfo {
   cartfile() {
     let writepath = path.join(this.config.dir, 'Cartfile');
     let emitter = new Emitter(this.config);
-    emitter.emitln('github aliyun/tea-swift ~> 1.0.0');
+    emitter.emitln('github aliyun/tea-swift ~> 1.0.3');
     Object.keys(this.dependencies).forEach((key) => {
       const item = this.dependencies[key];
       const meta = item.meta;
@@ -99,7 +99,7 @@ class PackageInfo extends BasePackageInfo {
     let emitter = new Emitter(this.config);
     emitter.emitln('dependencies: [', 2);
     emitter.emitln('// Dependencies declare other packages that this package depends on.', 3);
-    emitter.emitln('.package(url: "https://github.com/aliyun/tea-swift.git", from: "1.0.0"),', 3);
+    emitter.emitln('.package(url: "https://github.com/aliyun/tea-swift.git", from: "1.0.3"),', 3);
     let items = [];
     items.push('.product(name: "Tea", package: "tea-swift")');
     Object.keys(this.dependencies).forEach((key) => {
