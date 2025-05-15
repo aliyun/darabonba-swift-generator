@@ -83,13 +83,9 @@ open class Client {
         do {
             var a: String = "test"
         }
-        catch {
-            if error is Tea.TeaError {
-                var b: String = "test"
-                var e: Tea.ReuqestError = error as! Tea.ReuqestError
-            } else {
-                throw error
-            }
+        catch let error as Tea.TeaError {
+            var b: String = "test"
+            var e: Tea.ReuqestError = error as! Tea.ReuqestError
         }
         defer {
             var c: String = "test"
