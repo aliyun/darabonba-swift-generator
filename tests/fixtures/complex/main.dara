@@ -54,6 +54,7 @@ model ComplexRequest = {
   u16: uint16,
   obj: object,
   any: any,
+  arrayany: [any],
   byt: bytes,
   req: $Request,
   resp: $Response,

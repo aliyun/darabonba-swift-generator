@@ -25,9 +25,10 @@ public class Test : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("test") {
-            self.test = dict["test"] as! String
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["test"] as? String {
+            self.test = value
         }
     }
 }

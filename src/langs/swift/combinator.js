@@ -1062,9 +1062,13 @@ class Combinator extends CombinatorBase {
         };
 
         emitter.emitln(`var l${depth} : [${this.emitType(type.itemType)}] = []`, this.level);
-        emitter.emitln(`for v${depth} in ${name} as! [Any] {`, this.level);
+        emitter.emitln(`for v${depth} in ${name} as! [Any?] {`, this.level);
+        this.levelUp();
+        emitter.emitln(`if v${depth} != nil {`, this.level);
         this.levelUp();
         this.emitComplexFromMap(emitter, propInfo, `l${depth}`, depth + 1);
+        this.levelDown();
+        emitter.emitln('}', this.level);
         this.levelDown();
         emitter.emitln('}', this.level);
         if (is.array(parentType)) {
@@ -1074,10 +1078,12 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = l${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
+        emitter.emitln(`if let value = dict["${fieldName}"] as? [Any?] {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [${this.emitType(type.itemType)}] = []`, this.level);
-        emitter.emitln(`for v in dict["${fieldName}"] as! [Any] {`, this.level);
+        emitter.emitln('for v in value {', this.level);
+        this.levelUp();
+        emitter.emitln('if v != nil {', this.level);
         this.levelUp();
         if (is.array(type.itemType) || is.map(type.itemType)) {
           const propInfo = {
@@ -1092,7 +1098,7 @@ class Combinator extends CombinatorBase {
             emitter.emitln(`var model = ${this.emitType(type.itemType)}()`, this.level);
             emitter.emitln('if v != nil {', this.level);
             this.levelUp();
-            emitter.emitln('model.fromMap(v as! [String: Any])', this.level);
+            emitter.emitln('model.fromMap(v as? [String: Any?])', this.level);
             this.levelDown();
             emitter.emitln('}', this.level);
             emitter.emitln('tmp.append(model)', this.level);
@@ -1101,6 +1107,8 @@ class Combinator extends CombinatorBase {
             emitter.needSave = false;
           }
         }
+        this.levelDown();
+        emitter.emitln('}', this.level);
         this.levelDown();
         emitter.emitln('}', this.level);
         emitter.emitln(`self.${_name(name)} = tmp`, this.level);
@@ -1129,10 +1137,10 @@ class Combinator extends CombinatorBase {
           emitter.emitln(`${carrier}[k${num}] = d${depth}`, this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${fieldName}") {`, this.level);
+        emitter.emitln(`if let value = dict["${fieldName}"] as? [String: Any?] {`, this.level);
         this.levelUp();
         emitter.emitln(`var tmp : [String: ${this.emitType(type.valType)}] = [:]`, this.level);
-        emitter.emitln(`for (k, v) in dict["${fieldName}"] as! [String: Any] {`, this.level);
+        emitter.emitln('for (k, v) in value {', this.level);
         this.levelUp();
         if (is.array(type.valType) || is.map(type.valType)) {
           const propInfo = {
@@ -1147,7 +1155,7 @@ class Combinator extends CombinatorBase {
             emitter.emitln('if v != nil {', this.level);
             this.levelUp();
             emitter.emitln(`var model = ${this.emitType(type.valType)}()`, this.level);
-            emitter.emitln('model.fromMap(v as! [String: Any])', this.level);
+            emitter.emitln('model.fromMap(v as? [String: Any?])', this.level);
             emitter.emitln('tmp[k] = model', this.level);
             this.levelDown();
             emitter.emitln('}', this.level);
@@ -1168,7 +1176,7 @@ class Combinator extends CombinatorBase {
         emitter.emitln(`var model = ${this.emitType(type)}()`, this.level);
         emitter.emitln(`if ${name} != nil {`, this.level);
         this.levelUp();
-        emitter.emitln(`model.fromMap(${name} as! [String: Any])`, this.level);
+        emitter.emitln(`model.fromMap(${name} as? [String: Any?])`, this.level);
         this.levelDown();
         emitter.emitln('}', this.level);
         emitter.emitln(`l${num}.append(model)`, this.level);
@@ -1176,7 +1184,7 @@ class Combinator extends CombinatorBase {
         emitter.emitln(`if ${name} != nil {`, this.level);
         this.levelUp();
         emitter.emitln(`var model = ${this.emitType(type)}()`, this.level);
-        emitter.emitln(`model.fromMap(${name} as! [String: Any])`, this.level);
+        emitter.emitln(`model.fromMap(${name} as? [String: Any?])`, this.level);
         emitter.emitln(`d${num}[k${num}] = model`, this.level);
         this.levelDown();
         emitter.emitln('}', this.level);
@@ -1186,8 +1194,9 @@ class Combinator extends CombinatorBase {
   }
 
   emitFromMap(emitter, modelName, props) {
-    emitter.emitln('public override func fromMap(_ dict: [String: Any]) -> Void {', this.level);
+    emitter.emitln('public override func fromMap(_ dict: [String: Any?]?) -> Void {', this.level);
     this.levelUp();
+    emitter.emitln('guard let dict else { return }', this.level);
     props.forEach(prop => {
       let noteName = prop.notes.filter(item => item.key === 'name');
       let name = noteName.length > 0 ? noteName[0].value : prop.name;
@@ -1204,21 +1213,24 @@ class Combinator extends CombinatorBase {
         if (emt.needSave === true) {
           emitter.emit(emt.output);
         } else {
-          emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
+          emitter.emitln(`if let value = dict["${name}"] as? ${this.emitType(prop.type)} {`, this.level);
           this.levelUp();
-          emitter.emitln(`self.${_name(prop.name)} = dict["${name}"] as! ${this.emitType(prop.type)}`, this.level);
+          emitter.emitln(`self.${_name(prop.name)} = value`, this.level);
           this.levelDown();
           emitter.emitln('}', this.level);
         }
       } else {
-        emitter.emitln(`if dict.keys.contains("${name}") {`, this.level);
-        this.levelUp();
+        
         if (is.object(prop.type) && prop.type.objectName && prop.type.objectName.indexOf('#') === 0) {
+          emitter.emitln(`if let value = dict["${name}"] as? [String: Any?] {`, this.level);
+          this.levelUp();
           emitter.emitln(`var model = ${this.emitType(prop.type)}()`, this.level);
-          emitter.emitln(`model.fromMap(dict["${name}"] as! [String: Any])`, this.level);
+          emitter.emitln('model.fromMap(value)', this.level);
           emitter.emitln(`self.${_name(prop.name)} = model`, this.level);
         } else {
-          emitter.emitln(`self.${_name(prop.name)} = dict["${name}"] as! ${this.emitType(prop.type)}`, this.level);
+          emitter.emitln(`if let value = dict["${name}"] as? ${this.emitType(prop.type)} {`, this.level);
+          this.levelUp();
+          emitter.emitln(`self.${_name(prop.name)} = value`, this.level);
         }
         this.levelDown();
         emitter.emitln('}', this.level);
