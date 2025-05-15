@@ -34,15 +34,16 @@ public class Request : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("a") {
-            self.a = dict["a"] as! [String: String]
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["a"] as? [String: String] {
+            self.a = value
         }
-        if dict.keys.contains("b") {
-            self.b = dict["b"] as! String
+        if let value = dict["b"] as? String {
+            self.b = value
         }
-        if dict.keys.contains("c") {
-            self.c = dict["c"] as! Int
+        if let value = dict["c"] as? Int {
+            self.c = value
         }
     }
 }
@@ -76,12 +77,13 @@ public class Response : Tea.TeaModel {
             return map
         }
 
-        public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("name") {
-                self.name = dict["name"] as! String
+        public override func fromMap(_ dict: [String: Any?]?) -> Void {
+            guard let dict else { return }
+            if let value = dict["name"] as? String {
+                self.name = value
             }
-            if dict.keys.contains("len") {
-                self.len = dict["len"] as! Int64
+            if let value = dict["len"] as? Int64 {
+                self.len = value
             }
         }
     }
@@ -113,13 +115,14 @@ public class Response : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("header") {
-            self.header = dict["header"] as! [String: String]
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["header"] as? [String: String] {
+            self.header = value
         }
-        if dict.keys.contains("body") {
+        if let value = dict["body"] as? [String: Any?] {
             var model = Response.Body()
-            model.fromMap(dict["body"] as! [String: Any])
+            model.fromMap(value)
             self.body = model
         }
     }

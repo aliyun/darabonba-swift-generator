@@ -27,9 +27,10 @@ public class ComplexRequest : Tea.TeaModel {
             return map
         }
 
-        public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("Content") {
-                self.content = dict["Content"] as! String
+        public override func fromMap(_ dict: [String: Any?]?) -> Void {
+            guard let dict else { return }
+            if let value = dict["Content"] as? String {
+                self.content = value
             }
         }
     }
@@ -69,15 +70,16 @@ public class ComplexRequest : Tea.TeaModel {
             return map
         }
 
-        public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("key") {
-                self.key = dict["key"] as! String
+        public override func fromMap(_ dict: [String: Any?]?) -> Void {
+            guard let dict else { return }
+            if let value = dict["key"] as? String {
+                self.key = value
             }
-            if dict.keys.contains("value") {
-                self.value = dict["value"] as! [String]
+            if let value = dict["value"] as? [String] {
+                self.value = value
             }
-            if dict.keys.contains("extra") {
-                self.extra = dict["extra"] as! [String: String]
+            if let value = dict["extra"] as? [String: String] {
+                self.extra = value
             }
         }
     }
@@ -104,9 +106,10 @@ public class ComplexRequest : Tea.TeaModel {
             return map
         }
 
-        public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("PartNumber") {
-                self.partNumber = dict["PartNumber"] as! String
+        public override func fromMap(_ dict: [String: Any?]?) -> Void {
+            guard let dict else { return }
+            if let value = dict["PartNumber"] as? String {
+                self.partNumber = value
             }
         }
     }
@@ -138,12 +141,13 @@ public class ComplexRequest : Tea.TeaModel {
             return map
         }
 
-        public override func fromMap(_ dict: [String: Any]) -> Void {
-            if dict.keys.contains("Name") {
-                self.name = dict["Name"] as! String
+        public override func fromMap(_ dict: [String: Any?]?) -> Void {
+            guard let dict else { return }
+            if let value = dict["Name"] as? String {
+                self.name = value
             }
-            if dict.keys.contains("Code") {
-                self.code = dict["Code"] as! Int32
+            if let value = dict["Code"] as? Int32 {
+                self.code = value
             }
         }
     }
@@ -204,6 +208,8 @@ public class ComplexRequest : Tea.TeaModel {
     public var obj: [String: Any]?
 
     public var any: Any?
+
+    public var arrayany: [Any]?
 
     public var byt: [UInt8]?
 
@@ -270,6 +276,7 @@ public class ComplexRequest : Tea.TeaModel {
         try self.validateRequired(self.u16, "u16")
         try self.validateRequired(self.obj, "obj")
         try self.validateRequired(self.any, "any")
+        try self.validateRequired(self.arrayany, "arrayany")
         try self.validateRequired(self.byt, "byt")
         try self.validateRequired(self.req, "req")
         try self.req?.validate()
@@ -381,6 +388,9 @@ public class ComplexRequest : Tea.TeaModel {
         if self.any != nil {
             map["any"] = self.any!
         }
+        if self.arrayany != nil {
+            map["arrayany"] = self.arrayany!
+        }
         if self.byt != nil {
             map["byt"] = self.byt!
         }
@@ -436,175 +446,187 @@ public class ComplexRequest : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("duplicatName") {
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["duplicatName"] as? [String: Any?] {
             var model = DarabonbaImport.Complexrequest()
-            model.fromMap(dict["duplicatName"] as! [String: Any])
+            model.fromMap(value)
             self.duplicatName = model
         }
-        if dict.keys.contains("accessKey") {
-            self.accessKey = dict["accessKey"] as! String
+        if let value = dict["accessKey"] as? String {
+            self.accessKey = value
         }
-        if dict.keys.contains("Body") {
-            self.body = dict["Body"] as! InputStream
+        if let value = dict["Body"] as? InputStream {
+            self.body = value
         }
-        if dict.keys.contains("Strs") {
-            self.strs = dict["Strs"] as! [String]
+        if let value = dict["Strs"] as? [String] {
+            self.strs = value
         }
-        if dict.keys.contains("header") {
+        if let value = dict["header"] as? [String: Any?] {
             var model = ComplexRequest.Header()
-            model.fromMap(dict["header"] as! [String: Any])
+            model.fromMap(value)
             self.header = model
         }
-        if dict.keys.contains("Num") {
-            self.Num = dict["Num"] as! Int
+        if let value = dict["Num"] as? Int {
+            self.Num = value
         }
-        if dict.keys.contains("configs") {
+        if let value = dict["configs"] as? [String: Any?] {
             var model = ComplexRequest.Configs()
-            model.fromMap(dict["configs"] as! [String: Any])
+            model.fromMap(value)
             self.configs = model
         }
-        if dict.keys.contains("Part") {
+        if let value = dict["Part"] as? [Any?] {
             var tmp : [ComplexRequest.Part] = []
-            for v in dict["Part"] as! [Any] {
-                var model = ComplexRequest.Part()
+            for v in value {
                 if v != nil {
-                    model.fromMap(v as! [String: Any])
+                    var model = ComplexRequest.Part()
+                    if v != nil {
+                        model.fromMap(v as? [String: Any?])
+                    }
+                    tmp.append(model)
                 }
-                tmp.append(model)
             }
             self.part = tmp
         }
-        if dict.keys.contains("i64") {
-            self.i64 = dict["i64"] as! Int64
+        if let value = dict["i64"] as? Int64 {
+            self.i64 = value
         }
-        if dict.keys.contains("f64") {
-            self.f64 = dict["f64"] as! Double
+        if let value = dict["f64"] as? Double {
+            self.f64 = value
         }
-        if dict.keys.contains("b") {
-            self.b = dict["b"] as! Bool
+        if let value = dict["b"] as? Bool {
+            self.b = value
         }
-        if dict.keys.contains("f32") {
-            self.f32 = dict["f32"] as! Double
+        if let value = dict["f32"] as? Double {
+            self.f32 = value
         }
-        if dict.keys.contains("f64List") {
-            self.f64List = dict["f64List"] as! [Double]
+        if let value = dict["f64List"] as? [Double] {
+            self.f64List = value
         }
-        if dict.keys.contains("floatList") {
-            self.floatList = dict["floatList"] as! [Double]
+        if let value = dict["floatList"] as? [Double] {
+            self.floatList = value
         }
-        if dict.keys.contains("booleantList") {
-            self.booleantList = dict["booleantList"] as! [Bool]
+        if let value = dict["booleantList"] as? [Bool] {
+            self.booleantList = value
         }
-        if dict.keys.contains("i32") {
-            self.i32 = dict["i32"] as! Int32
+        if let value = dict["i32"] as? Int32 {
+            self.i32 = value
         }
-        if dict.keys.contains("stringList") {
-            self.stringList = dict["stringList"] as! [String]
+        if let value = dict["stringList"] as? [String] {
+            self.stringList = value
         }
-        if dict.keys.contains("intList") {
-            self.intList = dict["intList"] as! [Int]
+        if let value = dict["intList"] as? [Int] {
+            self.intList = value
         }
-        if dict.keys.contains("int32List") {
-            self.int32List = dict["int32List"] as! [Int32]
+        if let value = dict["int32List"] as? [Int32] {
+            self.int32List = value
         }
-        if dict.keys.contains("int16List") {
-            self.int16List = dict["int16List"] as! [Int32]
+        if let value = dict["int16List"] as? [Int32] {
+            self.int16List = value
         }
-        if dict.keys.contains("int64List") {
-            self.int64List = dict["int64List"] as! [Int64]
+        if let value = dict["int64List"] as? [Int64] {
+            self.int64List = value
         }
-        if dict.keys.contains("uint64List") {
-            self.uint64List = dict["uint64List"] as! [Int64]
+        if let value = dict["uint64List"] as? [Int64] {
+            self.uint64List = value
         }
-        if dict.keys.contains("uint32List") {
-            self.uint32List = dict["uint32List"] as! [Int32]
+        if let value = dict["uint32List"] as? [Int32] {
+            self.uint32List = value
         }
-        if dict.keys.contains("uint16List") {
-            self.uint16List = dict["uint16List"] as! [Int32]
+        if let value = dict["uint16List"] as? [Int32] {
+            self.uint16List = value
         }
-        if dict.keys.contains("u64") {
-            self.u64 = dict["u64"] as! Int64
+        if let value = dict["u64"] as? Int64 {
+            self.u64 = value
         }
-        if dict.keys.contains("u32") {
-            self.u32 = dict["u32"] as! Int32
+        if let value = dict["u32"] as? Int32 {
+            self.u32 = value
         }
-        if dict.keys.contains("u16") {
-            self.u16 = dict["u16"] as! Int32
+        if let value = dict["u16"] as? Int32 {
+            self.u16 = value
         }
-        if dict.keys.contains("obj") {
-            self.obj = dict["obj"] as! [String: Any]
+        if let value = dict["obj"] as? [String: Any] {
+            self.obj = value
         }
-        if dict.keys.contains("any") {
-            self.any = dict["any"] as! Any
+        if let value = dict["any"] as? Any {
+            self.any = value
         }
-        if dict.keys.contains("byt") {
-            self.byt = dict["byt"] as! [UInt8]
+        if let value = dict["arrayany"] as? [Any] {
+            self.arrayany = value
         }
-        if dict.keys.contains("req") {
+        if let value = dict["byt"] as? [UInt8] {
+            self.byt = value
+        }
+        if let value = dict["req"] as? [String: Any?] {
             var model = Tea.TeaRequest()
-            model.fromMap(dict["req"] as! [String: Any])
+            model.fromMap(value)
             self.req = model
         }
-        if dict.keys.contains("resp") {
+        if let value = dict["resp"] as? [String: Any?] {
             var model = Tea.TeaResponse()
-            model.fromMap(dict["resp"] as! [String: Any])
+            model.fromMap(value)
             self.resp = model
         }
-        if dict.keys.contains("map") {
-            self.map = dict["map"] as! [String: String]
+        if let value = dict["map"] as? [String: String] {
+            self.map = value
         }
-        if dict.keys.contains("anyMap") {
-            self.anyMap = dict["anyMap"] as! [String: Any]
+        if let value = dict["anyMap"] as? [String: Any] {
+            self.anyMap = value
         }
-        if dict.keys.contains("numMap") {
-            self.numMap = dict["numMap"] as! [String: Int]
+        if let value = dict["numMap"] as? [String: Int] {
+            self.numMap = value
         }
-        if dict.keys.contains("modelMap") {
+        if let value = dict["modelMap"] as? [String: Any?] {
             var tmp : [String: DarabonbaImport.Request] = [:]
-            for (k, v) in dict["modelMap"] as! [String: Any] {
+            for (k, v) in value {
                 if v != nil {
                     var model = DarabonbaImport.Request()
-                    model.fromMap(v as! [String: Any])
+                    model.fromMap(v as? [String: Any?])
                     tmp[k] = model
                 }
             }
             self.modelMap = tmp
         }
-        if dict.keys.contains("request") {
+        if let value = dict["request"] as? [String: Any?] {
             var model = DarabonbaImport.Request()
-            model.fromMap(dict["request"] as! [String: Any])
+            model.fromMap(value)
             self.request = model
         }
-        if dict.keys.contains("client") {
-            self.client = dict["client"] as! DarabonbaImport.Client
+        if let value = dict["client"] as? DarabonbaImport.Client {
+            self.client = value
         }
-        if dict.keys.contains("instance") {
+        if let value = dict["instance"] as? [String: Any?] {
             var model = DarabonbaImport.Request.Instance()
-            model.fromMap(dict["instance"] as! [String: Any])
+            model.fromMap(value)
             self.instance = model
         }
-        if dict.keys.contains("complexList") {
+        if let value = dict["complexList"] as? [Any?] {
             var tmp : [[[ComplexRequest.ComplexList]]] = []
-            for v in dict["complexList"] as! [Any] {
-                var l1 : [[ComplexRequest.ComplexList]] = []
-                for v1 in v as! [Any] {
-                    var l2 : [ComplexRequest.ComplexList] = []
-                    for v2 in v1 as! [Any] {
-                        var model = ComplexRequest.ComplexList()
-                        if v2 != nil {
-                            model.fromMap(v2 as! [String: Any])
+            for v in value {
+                if v != nil {
+                    var l1 : [[ComplexRequest.ComplexList]] = []
+                    for v1 in v as! [Any?] {
+                        if v1 != nil {
+                            var l2 : [ComplexRequest.ComplexList] = []
+                            for v2 in v1 as! [Any?] {
+                                if v2 != nil {
+                                    var model = ComplexRequest.ComplexList()
+                                    if v2 != nil {
+                                        model.fromMap(v2 as? [String: Any?])
+                                    }
+                                    l2.append(model)
+                                }
+                            }
+                            l1.append(l2)
                         }
-                        l2.append(model)
                     }
-                    l1.append(l2)
+                    tmp.append(l1)
                 }
-                tmp.append(l1)
             }
             self.complexList = tmp
         }
-        if dict.keys.contains("complexList1") {
-            self.complexList1 = dict["complexList1"] as! [[[String: String]]]
+        if let value = dict["complexList1"] as? [[[String: String]]] {
+            self.complexList1 = value
         }
     }
 }
@@ -634,10 +656,11 @@ public class Response : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("instance") {
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["instance"] as? [String: Any?] {
             var model = ComplexRequest.Part()
-            model.fromMap(dict["instance"] as! [String: Any])
+            model.fromMap(value)
             self.instance = model
         }
     }
